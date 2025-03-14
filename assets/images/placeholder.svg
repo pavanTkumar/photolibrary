@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Background -->
+  <rect width="800" height="600" fill="#EEEEEE"/>
+  
+  <!-- Mountain -->
+  <polygon points="0,600 300,250 600,600" fill="#CCCCCC"/>
+  <polygon points="400,300 800,600 600,600" fill="#AAAAAA"/>
+  
+  <!-- Sun -->
+  <circle cx="650" cy="150" r="80" fill="#FFCC66"/>
+  
+  <!-- Trees -->
+  <rect x="150" y="500" width="20" height="100" fill="#8B4513"/>
+  <polygon points="110,500 210,500 160,400" fill="#006400"/>
+  <polygon points="120,450 200,450 160,350" fill="#006400"/>
+  <polygon points="130,400 190,400 160,300" fill="#006400"/>
+  
+  <!-- Lake/Water -->
+  <path d="M0,550 C200,520 600,580 800,540 L800,600 L0,600 Z" fill="#4682B4"/>
+  
+  <!-- Camera icon in the center -->
+  <circle cx="400" cy="300" r="60" fill="rgba(255,255,255,0.7)"/>
+  <rect x="360" y="280" width="80" height="50" rx="5" fill="#666666"/>
+  <rect x="375" y="270" width="50" height="10" rx="3" fill="#666666"/>
+  <circle cx="400" cy="305" r="20" fill="#888888"/>
+  <circle cx="400" cy="305" r="15" fill="#444444"/>
+  <circle cx="400" cy="305" r="10" fill="#222222"/>
+  <circle cx="430" cy="285" r="5" fill="#FF5252"/>
+  
+  <!-- Text -->
+  <text x="400" y="400" font-family="Arial" font-size="24" fill="#666666" text-anchor="middle">Community Photos</text>
+  <text x="400" y="430" font-family="Arial" font-size="18" fill="#666666" text-anchor="middle">Share your moments</text>
+</svg>
