@@ -190,7 +190,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
                 },
               ).animate().fadeIn(duration: 300.ms).slideY(
                 begin: 0.3,
-                end: 0,
+                end: 0.0,
                 duration: 300.ms,
                 curve: Curves.easeOutQuad,
               ),
@@ -207,7 +207,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
                 maxLines: 3,
               ).animate().fadeIn(duration: 300.ms, delay: 100.ms).slideY(
                 begin: 0.3,
-                end: 0,
+                end: 0.0,
                 duration: 300.ms,
                 delay: 100.ms,
                 curve: Curves.easeOutQuad,
@@ -220,7 +220,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
                 onCommunityChanged: _handleCommunityChanged,
               ).animate().fadeIn(duration: 300.ms, delay: 200.ms).slideY(
                 begin: 0.3,
-                end: 0,
+                end: 0.0,
                 duration: 300.ms,
                 delay: 200.ms,
                 curve: Curves.easeOutQuad,
@@ -233,7 +233,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
                 onTagsChanged: _handleTagsChanged,
               ).animate().fadeIn(duration: 300.ms, delay: 300.ms).slideY(
                 begin: 0.3,
-                end: 0,
+                end: 0.0,
                 duration: 300.ms,
                 delay: 300.ms,
                 curve: Curves.easeOutQuad,
@@ -259,7 +259,7 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
                 ),
               ).animate().fadeIn(duration: 300.ms, delay: 400.ms).slideY(
                 begin: 0.3,
-                end: 0,
+                end: 0.0,
                 duration: 300.ms,
                 delay: 400.ms,
                 curve: Curves.easeOutQuad,

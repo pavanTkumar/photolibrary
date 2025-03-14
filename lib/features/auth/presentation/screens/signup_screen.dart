@@ -116,7 +116,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           .fadeIn(duration: 500.ms, delay: 300.ms)
                           .slideY(
                             begin: 0.3,
-                            end: 0,
+                            end: 0.0,
                             duration: 500.ms,
                             delay: 300.ms,
                             curve: Curves.easeOutQuad,
@@ -279,7 +279,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               .fadeIn(duration: 500.ms, delay: 1000.ms)
                               .slideY(
                                 begin: 0.3,
-                                end: 0,
+                                end: 0.0,
                                 duration: 500.ms,
                                 delay: 1000.ms,
                                 curve: Curves.easeOutQuad,
@@ -292,7 +292,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     .fadeIn(duration: 700.ms, delay: 400.ms)
                     .slideY(
                       begin: 0.3,
-                      end: 0,
+                      end: 0.0,
                       duration: 700.ms,
                       delay: 400.ms,
                       curve: Curves.easeOutQuad,

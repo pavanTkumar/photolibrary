@@ -287,7 +287,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
           delay: (index * 100).ms,
         ).slideY(
           begin: 0.2,
-          end: 0,
+          end: 0.0,
           duration: 300.ms,
           delay: (index * 100).ms,
           curve: Curves.easeOutQuad,
@@ -381,7 +381,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> with Single
           delay: (index * 100).ms,
         ).slideY(
           begin: 0.2,
-          end: 0,
+          end: 0.0,
           duration: 300.ms,
           delay: (index * 100).ms,
           curve: Curves.easeOutQuad,

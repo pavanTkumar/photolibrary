@@ -59,7 +59,7 @@ class _AnimatedAppBarState extends State<AnimatedAppBar> with SingleTickerProvid
       title: Text(widget.title)
         .animate(controller: _controller)
         .fade(duration: 300.ms)
-        .slideY(begin: -0.2, end: 0, duration: 300.ms, curve: Curves.easeOut),
+        .slideY(begin: -0.2, end: 0.0, duration: 300.ms, curve: Curves.easeOut),
       centerTitle: widget.centerTitle,
       actions: widget.actions != null
         ? widget.actions!.mapIndexed((index, action) {
@@ -68,7 +68,7 @@ class _AnimatedAppBarState extends State<AnimatedAppBar> with SingleTickerProvid
               .fade(duration: 300.ms, delay: (50 * index).ms)
               .slideY(
                 begin: -0.2,
-                end: 0,
+                end: 0.0,
                 duration: 300.ms,
                 delay: (50 * index).ms,
                 curve: Curves.easeOut,
@@ -79,7 +79,7 @@ class _AnimatedAppBarState extends State<AnimatedAppBar> with SingleTickerProvid
         ? widget.leading!
             .animate(controller: _controller)
             .fade(duration: 300.ms)
-            .slideY(begin: -0.2, end: 0, duration: 300.ms, curve: Curves.easeOut)
+            .slideY(begin: -0.2, end: 0.0, duration: 300.ms, curve: Curves.easeOut)
         : null,
       backgroundColor: widget.backgroundColor,
       foregroundColor: widget.foregroundColor,

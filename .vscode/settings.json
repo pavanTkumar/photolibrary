@@ -1,0 +1,6 @@
+{
+  "files.exclude": {
+    "**/dataconnect-generated/**": true
+  },
+  "dart.analyzedFilesOnly": true
+}

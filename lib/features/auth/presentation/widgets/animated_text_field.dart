@@ -91,7 +91,7 @@ class _AnimatedTextFieldState extends State<AnimatedTextField> {
           .fadeIn(duration: 500.ms, delay: widget.animationDelay.ms)
           .slideY(
             begin: 0.3,
-            end: 0,
+            end: 0.0,
             duration: 500.ms,
             delay: widget.animationDelay.ms,
             curve: Curves.easeOutQuad,

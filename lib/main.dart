@@ -10,38 +10,54 @@ import 'core/firebase/firebase_init.dart';
 import 'app.dart';
 
 void main() async {
+  // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await FirebaseInit.initializeApp();
-  
-  // Run the app with providers
-  runApp(
-    MultiProvider(
-      providers: [
-        // Theme provider
-        ChangeNotifierProvider(create: (_) => ThemeProvider()),
-        
-        // Services providers
-        ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => StorageService()),
-        ChangeNotifierProvider(create: (_) => FirestoreService()),
-        
-        // Photo upload service with dependencies
-        ChangeNotifierProxyProvider2<StorageService, FirestoreService, PhotoUploadService>(
-          create: (context) => PhotoUploadService(
-            storageService: context.read<StorageService>(),
-            firestoreService: context.read<FirestoreService>(),
+  try {
+    // Initialize Firebase
+    await FirebaseInit.initializeApp();
+    
+    // Run the app with providers
+    runApp(
+      MultiProvider(
+        providers: [
+          // Theme provider
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          
+          // Services providers
+          ChangeNotifierProvider(create: (_) => AuthService()),
+          ChangeNotifierProvider(create: (_) => StorageService()),
+          ChangeNotifierProvider(create: (_) => FirestoreService()),
+          
+          // Photo upload service with dependencies
+          ChangeNotifierProxyProvider2<StorageService, FirestoreService, PhotoUploadService>(
+            create: (context) => PhotoUploadService(
+              storageService: context.read<StorageService>(),
+              firestoreService: context.read<FirestoreService>(),
+            ),
+            update: (context, storageService, firestoreService, previous) {
+              return previous ?? PhotoUploadService(
+                storageService: storageService,
+                firestoreService: firestoreService,
+              );
+            },
           ),
-          update: (context, storageService, firestoreService, previous) {
-            return previous ?? PhotoUploadService(
-              storageService: storageService,
-              firestoreService: firestoreService,
-            );
-          },
+        ],
+        child: const FishpondApp(),
+      ),
+    );
+  } catch (e) {
+    print('Error starting app: $e');
+    // Show a simple error screen instead of crashing
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(
+          child: Text(
+            'Failed to start app. Please restart.',
+            style: TextStyle(fontSize: 16),
+          ),
         ),
-      ],
-      child: const FishpondApp(),
-    ),
-  );
+      ),
+    ));
+  }
 }

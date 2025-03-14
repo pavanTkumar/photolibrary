@@ -86,10 +86,10 @@ class _AnimatedPhotoCardState extends State<AnimatedPhotoCard> with SingleTicker
     
     return Animate(
       effects: [
-        FadeEffect(delay: (widget.index * 100).ms, duration: 300.ms),
+        FadeEffect(delay: Duration(milliseconds: widget.index * 100), duration: const Duration(milliseconds: 300)),
         SlideEffect(
-          delay: (widget.index * 100).ms, 
-          duration: 300.ms,
+          delay: Duration(milliseconds: widget.index * 100), 
+          duration: const Duration(milliseconds: 300),
           begin: const Offset(0, 0.2),
           end: const Offset(0, 0),
         ),

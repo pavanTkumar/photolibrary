@@ -50,7 +50,7 @@ class CommunityScreen extends StatelessWidget {
               textAlign: TextAlign.center,
             ).animate().fadeIn(duration: 600.ms).slideY(
               begin: 0.2,
-              end: 0,
+              end: 0.0,
               duration: 600.ms,
               curve: Curves.easeOutQuad,
             ),
@@ -68,7 +68,7 @@ class CommunityScreen extends StatelessWidget {
               ),
             ).animate().fadeIn(duration: 600.ms, delay: 200.ms).slideY(
               begin: 0.2,
-              end: 0,
+              end: 0.0,
               duration: 600.ms,
               delay: 200.ms,
               curve: Curves.easeOutQuad,
@@ -93,7 +93,7 @@ class CommunityScreen extends StatelessWidget {
               ),
             ).animate().fadeIn(duration: 600.ms, delay: 400.ms).slideY(
               begin: 0.2,
-              end: 0,
+              end: 0.0,
               duration: 600.ms,
               delay: 400.ms,
               curve: Curves.easeOutQuad,

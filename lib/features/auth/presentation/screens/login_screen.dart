@@ -97,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           .fadeIn(duration: 500.ms, delay: 300.ms)
                           .slideY(
                             begin: 0.3,
-                            end: 0,
+                            end: 0.0,
                             duration: 500.ms,
                             delay: 300.ms,
                             curve: Curves.easeOutQuad,
@@ -112,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           .fadeIn(duration: 500.ms, delay: 500.ms)
                           .slideY(
                             begin: 0.3,
-                            end: 0,
+                            end: 0.0,
                             duration: 500.ms,
                             delay: 500.ms,
                             curve: Curves.easeOutQuad,
@@ -145,7 +145,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               .fadeIn(duration: 500.ms, delay: 700.ms)
                               .slideY(
                                 begin: 0.3,
-                                end: 0,
+                                end: 0.0,
                                 duration: 500.ms,
                                 delay: 700.ms,
                                 curve: Curves.easeOutQuad,
@@ -240,7 +240,7 @@ class _LoginScreenState extends State<LoginScreen> {
                               .fadeIn(duration: 500.ms, delay: 1100.ms)
                               .slideY(
                                 begin: 0.3,
-                                end: 0,
+                                end: 0.0,
                                 duration: 500.ms,
                                 delay: 1100.ms,
                                 curve: Curves.easeOutQuad,
@@ -253,7 +253,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     .fadeIn(duration: 700.ms, delay: 600.ms)
                     .slideY(
                       begin: 0.3,
-                      end: 0,
+                      end: 0.0,
                       duration: 700.ms,
                       delay: 600.ms,
                       curve: Curves.easeOutQuad,

@@ -102,6 +102,10 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
       return Scaffold(
         appBar: AppBar(
           title: const Text('Photo Details'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -115,10 +119,39 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar
+          // App Bar with profile info
           SliverAppBar(
-            expandedHeight: 300,
+            expandedHeight: 250,
             pinned: true,
+            leading: AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                color: Colors.white,
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ),
+            actions: [
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.share),
+                  color: Colors.white,
+                  onPressed: () {
+                    // Share functionality
+                  },
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'photo_${_photo.id}',
@@ -146,6 +179,11 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
                           appBar: AppBar(
                             backgroundColor: Colors.black38,
                             elevation: 0,
+                            leading: IconButton(
+                              icon: const Icon(Icons.arrow_back),
+                              color: Colors.white,
+                              onPressed: () => Navigator.of(context).pop(),
+                            ),
                           ),
                         ),
                       ),
@@ -484,7 +522,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
                     ),
                   ).animate().fade(
                     duration: 300.ms,
-                    delay: 650.ms + (index * 50).ms,
+                    delay: Duration(milliseconds: 650 + (index * 50)),
                   );
                 },
                 childCount: _photo.comments!.length,

@@ -169,18 +169,15 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
               );
             }
             
-            // Fixed: Use ListView.builder directly without padding to avoid overflow
-            return ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _events.length,
-              itemBuilder: (context, index) {
-                final event = _events[index];
-                
-                // Fixed: Wrap with SizedBox to constrain height and prevent overflow
-                return SizedBox(
-                  // No fixed height - let items size naturally within ListView
-                  width: double.infinity,
-                  child: Padding(
+            // Use ListView.builder with SafeArea to prevent overflow
+            return SafeArea(
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _events.length,
+                itemBuilder: (context, index) {
+                  final event = _events[index];
+                  
+                  return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: AnimatedEventCard(
                       id: event.id,
@@ -195,9 +192,9 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
                       onAttendToggle: () => _handleEventAttendToggle(event.id),
                       index: index,
                     ),
-                  ),
-                );
-              },
+                  );
+                },
+              ),
             );
           }).toList(),
         ),
@@ -220,13 +217,14 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
   
   Widget _buildLoadingItem() {
     return Container(
-      height: 280, // Fixed height for loading item
+      height: 260, // Reduced height to avoid overflow
       decoration: BoxDecoration(
         color: Colors.grey.shade200,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min, // This prevents overflow
         children: [
           // Image placeholder
           Container(
@@ -245,6 +243,7 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min, // This prevents overflow
               children: [
                 Container(
                   height: 24,
@@ -267,15 +266,6 @@ class _EventsScreenState extends State<EventsScreen> with SingleTickerProviderSt
                 Container(
                   height: 16,
                   width: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  height: 16,
-                  width: double.infinity,
                   decoration: BoxDecoration(
                     color: Colors.grey.shade300,
                     borderRadius: BorderRadius.circular(4),

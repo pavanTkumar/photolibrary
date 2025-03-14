@@ -60,7 +60,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyAucVQTguF8poUFUlZ4KKU9JAGP7wJWcmk',
-    appId: '1:941110850287:ios:67dde935842a8bf71be11a',
+    appId: '1:941110850287:ios:a2329f4d31a5f8891be11a',
     messagingSenderId: '941110850287',
     projectId: 'fish-pond-23c6c',
     storageBucket: 'fish-pond-23c6c.firebasestorage.app',
@@ -69,7 +69,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyAucVQTguF8poUFUlZ4KKU9JAGP7wJWcmk',
-    appId: '1:941110850287:ios:67dde935842a8bf71be11a',
+    appId: '1:941110850287:ios:a2329f4d31a5f8891be11a',
     messagingSenderId: '941110850287',
     projectId: 'fish-pond-23c6c',
     storageBucket: 'fish-pond-23c6c.firebasestorage.app',
@@ -85,4 +85,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'fish-pond-23c6c.firebasestorage.app',
     measurementId: 'G-K6TMMV4BQ8',
   );
+
 }

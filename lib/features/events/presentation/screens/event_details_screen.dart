@@ -161,7 +161,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ),
                   ).animate().fade(duration: 300.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     curve: Curves.easeOut,
                   ),
@@ -186,7 +186,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ],
                   ).animate().fade(duration: 300.ms, delay: 100.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 100.ms,
                     curve: Curves.easeOut,
@@ -209,7 +209,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ],
                   ).animate().fade(duration: 300.ms, delay: 150.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 150.ms,
                     curve: Curves.easeOut,
@@ -234,7 +234,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ],
                   ).animate().fade(duration: 300.ms, delay: 200.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 200.ms,
                     curve: Curves.easeOut,
@@ -290,7 +290,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ],
                   ).animate().fade(duration: 300.ms, delay: 250.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 250.ms,
                     curve: Curves.easeOut,
@@ -331,7 +331,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ),
                   ).animate().fade(duration: 300.ms, delay: 300.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 300.ms,
                     curve: Curves.easeOut,
@@ -347,7 +347,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ),
                   ).animate().fade(duration: 300.ms, delay: 350.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 350.ms,
                     curve: Curves.easeOut,
@@ -360,7 +360,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     style: theme.textTheme.bodyLarge,
                   ).animate().fade(duration: 300.ms, delay: 400.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 400.ms,
                     curve: Curves.easeOut,
@@ -402,7 +402,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                       ),
                     ).animate().fade(duration: 300.ms, delay: 450.ms).slideY(
                       begin: 0.2,
-                      end: 0,
+                      end: 0.0,
                       duration: 300.ms,
                       delay: 450.ms,
                       curve: Curves.easeOut,
@@ -464,7 +464,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ],
                   ).animate().fade(duration: 300.ms, delay: 550.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 550.ms,
                     curve: Curves.easeOut,
@@ -518,7 +518,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                     ],
                   ).animate().fade(duration: 300.ms, delay: 600.ms).slideY(
                     begin: 0.2,
-                    end: 0,
+                    end: 0.0,
                     duration: 300.ms,
                     delay: 600.ms,
                     curve: Curves.easeOut,
