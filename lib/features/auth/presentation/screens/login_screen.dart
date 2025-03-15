@@ -88,7 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         const SizedBox(height: 16),
                         Text(
-                          'Community Photos',
+                          'Welcome to Fish Pond',
                           style: theme.textTheme.headlineMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: Colors.white,

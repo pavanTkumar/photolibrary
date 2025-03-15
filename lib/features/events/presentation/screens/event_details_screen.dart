@@ -1,7 +1,10 @@
+// File: lib/features/events/presentation/screens/event_details_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/models/event_model.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
@@ -94,6 +97,11 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
     });
   }
 
+  void _goBack() {
+    // Use the standard Navigator pop method which is most reliable
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -102,6 +110,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
       return Scaffold(
         appBar: AppBar(
           title: const Text('Event Details'),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: _goBack,
+          ),
         ),
         body: const Center(
           child: CircularProgressIndicator(),
@@ -122,6 +134,34 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
+            leading: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                shape: BoxShape.circle,
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                color: Colors.white,
+                onPressed: _goBack,
+              ),
+            ),
+            actions: [
+              Container(
+                margin: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.black26,
+                  shape: BoxShape.circle,
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.share),
+                  color: Colors.white,
+                  onPressed: () {
+                    // Share functionality
+                  },
+                ),
+              ),
+            ],
             flexibleSpace: FlexibleSpaceBar(
               background: Hero(
                 tag: 'event_${_event.id}',
@@ -425,6 +465,10 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                               child: GestureDetector(
                                 onTap: () {
                                   // Navigate to photo details
+                                  context.pushNamed(
+                                    'photoDetails',
+                                    pathParameters: {'id': photo.id},
+                                  );
                                 },
                                 child: CachedNetworkImage(
                                   imageUrl: photo.imageUrl,
