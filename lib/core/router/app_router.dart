@@ -14,8 +14,13 @@ import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import 'route_names.dart';
 
 class AppRouter {
-  final GoRouter router = GoRouter(
+  // Global navigation key for the root navigator
+  final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  
+  late final GoRouter router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
+    debugLogDiagnostics: true, // Helps with debugging navigation
     routes: [
       // Onboarding and authentication routes
       GoRoute(
@@ -34,7 +39,7 @@ class AppRouter {
         builder: (context, state) => const SignupScreen(),
       ),
       
-      // Main app routes
+      // Main app routes - using ShellRoute to maintain bottom navigation state
       GoRoute(
         path: '/main',
         name: RouteNames.main,
@@ -52,24 +57,53 @@ class AppRouter {
       GoRoute(
         path: '/photo/:id',
         name: RouteNames.photoDetails,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final photoId = state.pathParameters['id']!;
-          return PhotoDetailsScreen(photoId: photoId);
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: PhotoDetailsScreen(photoId: photoId),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+          );
         },
       ),
       GoRoute(
         path: '/photo/upload',
         name: RouteNames.photoUpload,
-        builder: (context, state) => const PhotoUploadScreen(),
+        pageBuilder: (context, state) {
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: const PhotoUploadScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+          );
+        },
       ),
       
       // Event routes
       GoRoute(
         path: '/event/:id',
         name: RouteNames.eventDetails,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final eventId = state.pathParameters['id']!;
-          return EventDetailsScreen(eventId: eventId);
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: EventDetailsScreen(eventId: eventId),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+          );
         },
       ),
       
@@ -82,8 +116,26 @@ class AppRouter {
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
-        child: Text('Route not found: ${state.uri}'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Page not found: ${state.uri}'),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => context.go('/main'),
+              child: const Text('Go to Home'),
+            ),
+          ],
+        ),
       ),
     ),
+    // Redirects to handle errors
+    redirect: (context, state) {
+      // If we have an error, redirect to main
+      if (state.error != null) {
+        return '/main';
+      }
+      return null; // No redirect needed
+    },
   );
 }

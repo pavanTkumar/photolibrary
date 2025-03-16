@@ -118,22 +118,32 @@ class _PhotoUploadScreenState extends State<PhotoUploadScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final photoUploadService = Provider.of<PhotoUploadService>(context);
-    
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Upload Photo'),
-        actions: [
-          if (photoUploadService.selectedImage != null)
-            IconButton(
-              icon: const Icon(Icons.check),
-              onPressed: _isUploading ? null : _uploadPhoto,
-              tooltip: 'Upload Photo',
-            ),
-        ],
+Widget build(BuildContext context) {
+  final theme = Theme.of(context);
+  final photoUploadService = Provider.of<PhotoUploadService>(context);
+  
+  return Scaffold(
+    appBar: AppBar(
+      title: const Text('Upload Photo'),
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () {
+          try {
+            context.pop();
+          } catch (e) {
+            context.go('/main');
+          }
+        },
       ),
+      actions: [
+        if (photoUploadService.selectedImage != null)
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: _isUploading ? null : _uploadPhoto,
+            tooltip: 'Upload Photo',
+          ),
+      ],
+    ),
       body: _isUploading
           ? _buildUploadingState(photoUploadService.uploadProgress)
           : _buildUploadForm(theme, photoUploadService),

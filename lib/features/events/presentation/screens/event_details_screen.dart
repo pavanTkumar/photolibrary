@@ -97,11 +97,6 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
     });
   }
 
-  void _goBack() {
-    // Use the standard Navigator pop method which is most reliable
-    Navigator.of(context).pop();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -112,7 +107,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
           title: const Text('Event Details'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: _goBack,
+            onPressed: () {
+              try {
+                context.pop();
+              } catch (e) {
+                context.go('/main');
+              }
+            },
           ),
         ),
         body: const Center(
@@ -143,7 +144,13 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
               child: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 color: Colors.white,
-                onPressed: _goBack,
+                onPressed: () {
+                  try {
+                    context.pop();
+                  } catch (e) {
+                    context.go('/main');
+                  }
+                },
               ),
             ),
             actions: [

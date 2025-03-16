@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
 
@@ -50,7 +51,9 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
 
     if (mounted) {
       // For demo, create a sample photo
-      final samplePhoto = PhotoModel.sample(index: int.tryParse(widget.photoId.split('_').last) ?? 0);
+      final samplePhoto = PhotoModel.sample(
+        index: int.tryParse(widget.photoId.split('_').last) ?? 0,
+      );
       
       setState(() {
         _photo = samplePhoto;
@@ -94,6 +97,11 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
     });
   }
 
+  void _scrollToComments() {
+    // This would scroll to comments section
+    // Requires implementation with a ScrollController
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -104,7 +112,13 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
           title: const Text('Photo Details'),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              try {
+                context.pop();
+              } catch (e) {
+                context.go('/main');
+              }
+            },
           ),
         ),
         body: const Center(
@@ -119,12 +133,12 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar with profile info
+          // App Bar with photo image
           SliverAppBar(
             expandedHeight: 250,
             pinned: true,
-            leading: AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
+            leading: Container(
+              margin: const EdgeInsets.all(8),
               decoration: BoxDecoration(
                 color: Colors.black26,
                 shape: BoxShape.circle,
@@ -132,12 +146,17 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
               child: IconButton(
                 icon: const Icon(Icons.arrow_back),
                 color: Colors.white,
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: () {
+                  try {
+                    context.pop();
+                  } catch (e) {
+                    context.go('/main');
+                  }
+                },
               ),
             ),
             actions: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+              Container(
                 margin: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: Colors.black26,
@@ -182,7 +201,13 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
                             leading: IconButton(
                               icon: const Icon(Icons.arrow_back),
                               color: Colors.white,
-                              onPressed: () => Navigator.of(context).pop(),
+                              onPressed: () {
+                                try {
+                                  Navigator.of(context).pop();
+                                } catch (e) {
+                                  context.go('/main');
+                                }
+                              },
                             ),
                           ),
                         ),
@@ -218,7 +243,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title with animation
+                  // Title
                   Text(
                     _photo.title,
                     style: theme.textTheme.headlineSmall?.copyWith(
@@ -536,10 +561,5 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
         ],
       ),
     );
-  }
-  
-  void _scrollToComments() {
-    // This would scroll to comments section
-    // Requires implementation with a ScrollController
   }
 }
