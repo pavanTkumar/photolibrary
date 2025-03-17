@@ -1,4 +1,3 @@
-import 'package:fishpond/features/profile/presentation/screens/profile_edit_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -48,6 +47,15 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
     }
   }
 
+  // Navigate to profile edit screen
+  void _navigateToProfileEdit() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ProfileEditScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -61,22 +69,17 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
             expandedHeight: 240,
             pinned: true,
             actions: [
+              // Theme toggle button
               IconButton(
-                icon: const Icon(Icons.settings_outlined),
+                icon: const Icon(Icons.brightness_6),
                 onPressed: () {
-                  // Navigate to settings
+                  themeProvider.toggleTheme();
                 },
               ),
-              // Fixed theme toggle button
+              // Settings button - redirects to profile edit screen
               IconButton(
                 icon: const Icon(Icons.settings_outlined),
-                onPressed: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (context) => const ProfileEditScreen(),
-                    ),
-                  );
-                },
+                onPressed: _navigateToProfileEdit,
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
@@ -464,9 +467,7 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           Center(
             child: AnimatedGradientButton(
               text: 'Edit Profile',
-              onPressed: () {
-                // Navigate to edit profile
-              },
+              onPressed: _navigateToProfileEdit,
               gradient: [
                 theme.colorScheme.primary,
                 theme.colorScheme.primaryContainer,

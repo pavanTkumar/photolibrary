@@ -6,7 +6,6 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/router/route_names.dart';
 import '../widgets/photo_staggered_grid.dart';
-import '../../../../core/widgets/animated_app_bar.dart';
 
 class PhotosScreen extends StatefulWidget {
   const PhotosScreen({Key? key}) : super(key: key);
@@ -339,18 +338,18 @@ class _PhotosScreenState extends State<PhotosScreen> with SingleTickerProviderSt
             SliverAppBar(
               floating: true,
               snap: true,
-                  title: _isSearching
-                    ? TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: 'Search photos...',
-                          border: InputBorder.none,
-                          hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey : Colors.grey.shade600),
-                        ),
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                        autofocus: true,
-                      )
-                    : const Text('Community Photos'),
+              title: _isSearching
+                ? TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search photos...',
+                      border: InputBorder.none,
+                      hintStyle: TextStyle(color: Theme.of(context).brightness == Brightness.dark ? Colors.grey : Colors.grey.shade600),
+                    ),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+                    autofocus: true,
+                  )
+                : const Text('Community Photos'),
               actions: [
                 // Search toggle button
                 IconButton(
