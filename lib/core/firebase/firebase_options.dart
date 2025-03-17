@@ -59,6 +59,6 @@ class DefaultFirebaseOptions {
     projectId: 'YOUR_PROJECT_ID',
     storageBucket: 'YOUR_STORAGE_BUCKET',
     iosClientId: 'YOUR_IOS_CLIENT_ID',
-    iosBundleId: 'com.example.fishpond',
+    iosBundleId: 'com.suviko.fishpond',
   );
 }

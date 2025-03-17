@@ -1,3 +1,4 @@
+import 'package:fishpond/features/profile/presentation/screens/profile_edit_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,6 +7,7 @@ import '../../../../core/models/event_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
 import '../../../../core/theme/theme_provider.dart';
 import 'package:provider/provider.dart';
+import './profile_edit_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -67,14 +69,13 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
               ),
               // Fixed theme toggle button
               IconButton(
-                icon: Icon(
-                  themeProvider.themeMode == ThemeMode.dark
-                      ? Icons.light_mode
-                      : Icons.dark_mode,
-                ),
+                icon: const Icon(Icons.settings_outlined),
                 onPressed: () {
-                  // Toggle theme without navigation
-                  themeProvider.toggleTheme();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileEditScreen(),
+                    ),
+                  );
                 },
               ),
             ],

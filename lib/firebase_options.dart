@@ -64,7 +64,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '941110850287',
     projectId: 'fish-pond-23c6c',
     storageBucket: 'fish-pond-23c6c.firebasestorage.app',
-    iosBundleId: 'com.example.fishpond',
+    iosBundleId: 'com.suviko.fishpond',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
@@ -73,7 +73,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '941110850287',
     projectId: 'fish-pond-23c6c',
     storageBucket: 'fish-pond-23c6c.firebasestorage.app',
-    iosBundleId: 'com.example.fishpond',
+    iosBundleId: 'com.suviko.fishpond',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
