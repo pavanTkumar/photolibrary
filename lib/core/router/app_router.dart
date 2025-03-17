@@ -7,9 +7,14 @@ import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
 import '../../features/dashboard/presentation/screens/main_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/profile/presentation/screens/profile_edit_screen.dart';
 import '../../features/events/presentation/screens/event_details_screen.dart';
+import '../../features/events/presentation/screens/event_creation_screen.dart'; // New screen
 import '../../features/photos/presentation/screens/photo_details_screen.dart';
 import '../../features/photos/presentation/screens/photo_upload_screen.dart';
+import '../../features/community/presentation/screens/community_creation_screen.dart'; // New screen
+import '../../features/community/presentation/screens/community_details_screen.dart'; // New screen
+import '../../features/community/presentation/screens/community_browse_screen.dart'; // New screen
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
 import 'route_names.dart';
 
@@ -46,11 +51,36 @@ class AppRouter {
         builder: (context, state) => const MainScreen(),
       ),
       
+      // Community routes
+      GoRoute(
+        path: '/communities',
+        name: RouteNames.communities,
+        builder: (context, state) => const CommunityBrowseScreen(),
+      ),
+      GoRoute(
+        path: '/community/create',
+        name: RouteNames.communityCreate,
+        builder: (context, state) => const CommunityCreationScreen(),
+      ),
+      GoRoute(
+        path: '/community/:id',
+        name: RouteNames.communityDetails,
+        builder: (context, state) {
+          final communityId = state.pathParameters['id']!;
+          return CommunityDetailsScreen(communityId: communityId);
+        },
+      ),
+      
       // Profile routes
       GoRoute(
         path: '/profile',
         name: RouteNames.profile,
         builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/edit',
+        name: RouteNames.profileEdit,
+        builder: (context, state) => const ProfileEditScreen(),
       ),
       
       // Photo routes
@@ -74,18 +104,7 @@ class AppRouter {
       GoRoute(
         path: '/photo/upload',
         name: RouteNames.photoUpload,
-        pageBuilder: (context, state) {
-          return CustomTransitionPage(
-            key: state.pageKey,
-            child: const PhotoUploadScreen(),
-            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
-          );
-        },
+        builder: (context, state) => const PhotoUploadScreen(),
       ),
       
       // Event routes
@@ -105,6 +124,11 @@ class AppRouter {
             },
           );
         },
+      ),
+      GoRoute(
+        path: '/event/create',
+        name: RouteNames.eventCreate,
+        builder: (context, state) => const EventCreationScreen(),
       ),
       
       // Admin routes

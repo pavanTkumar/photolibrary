@@ -48,7 +48,7 @@ class _FloatingUploadButtonState extends State<FloatingUploadButton> with Single
       _controller.reverse();
     });
     
-    // Direct navigation to photo upload screen using GoRouter
+    // Navigate to photo upload screen
     context.pushNamed(RouteNames.photoUpload);
   }
   
@@ -59,25 +59,19 @@ class _FloatingUploadButtonState extends State<FloatingUploadButton> with Single
       _controller.reverse();
     });
     
-    // Navigate to event creation screen (this would be implemented in your app)
-    // For now, we'll show a temporary message since the event creation screen doesn't exist yet
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Event creation screen coming soon')),
-    );
+    // Navigate to event creation screen
+    context.pushNamed(RouteNames.eventCreate);
   }
   
-  // Navigate to join community screen
-  void _navigateToJoinCommunity(BuildContext context) {
+  // Navigate to community creation screen
+  void _navigateToCommunityCreate(BuildContext context) {
     setState(() {
       _isExpanded = false;
       _controller.reverse();
     });
     
-    // Navigate to community creation/join screen (this would be implemented in your app)
-    // For now, we'll show a temporary message since the community screen doesn't exist yet
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Community join screen coming soon')),
-    );
+    // Navigate to community creation screen
+    context.pushNamed(RouteNames.communityCreate);
   }
 
   @override
@@ -147,12 +141,12 @@ class _FloatingUploadButtonState extends State<FloatingUploadButton> with Single
               child: Visibility(
                 visible: _isExpanded,
                 child: FloatingActionButton.extended(
-                  heroTag: 'join_community',
-                  onPressed: () => _navigateToJoinCommunity(context),
+                  heroTag: 'create_community',
+                  onPressed: () => _navigateToCommunityCreate(context),
                   backgroundColor: theme.colorScheme.tertiaryContainer,
                   foregroundColor: theme.colorScheme.onTertiaryContainer,
                   icon: const Icon(Icons.people),
-                  label: const Text('Join Community'),
+                  label: const Text('Create Community'),
                 ),
               ),
             ),
