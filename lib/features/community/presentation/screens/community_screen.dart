@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../../core/router/route_names.dart';
-import '../../../core/widgets/buttons/animated_button.dart';
-import '../../../core/models/community_model.dart';
-import '../../../services/auth_service.dart';
-import '../../../services/firestore_service.dart';
+import '../../../../core/router/route_names.dart';
+import '../../../../core/widgets/buttons/animated_button.dart';
+import '../../../../core/models/community_model.dart';
+import '../../../../services/auth_service.dart';
+import '../../../../services/firestore_service.dart';
 import '../widgets/communtiy_card.dart';
 
 class CommunityScreen extends StatefulWidget {
