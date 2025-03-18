@@ -76,7 +76,10 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
       _photo = _photo.toggleLike();
     });
   }
-
+  void _sharePhoto() {
+  final shareText = 'Check out this photo: "${_photo.title}" by ${_photo.uploaderName} on Fish Pond';
+  Share.share(shareText);
+}
   void _submitComment() {
     if (_commentController.text.trim().isEmpty) return;
 
@@ -166,9 +169,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
                 child: IconButton(
                   icon: const Icon(Icons.share),
                   color: Colors.white,
-                  onPressed: () {
-                    // Share functionality
-                  },
+                  onPressed: _sharePhoto,
                 ),
               ),
             ],

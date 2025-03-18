@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../../core/models/event_model.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
@@ -75,6 +76,17 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
       _event = _event.toggleAttending();
     });
   }
+  
+  void _shareEvent() {
+  final dateFormat = DateFormat.yMMMMd();
+  final timeFormat = DateFormat.jm();
+  final formattedDate = dateFormat.format(_event.eventDate);
+  final formattedTime = timeFormat.format(_event.eventDate);
+  
+  final shareText = 'Join me at ${_event.title} on $formattedDate at $formattedTime at ${_event.location}. Check it out on Fish Pond!';
+  
+  Share.share(shareText);
+} 
 
   void _submitComment() {
     if (_commentController.text.trim().isEmpty) return;
@@ -163,9 +175,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                 child: IconButton(
                   icon: const Icon(Icons.share),
                   color: Colors.white,
-                  onPressed: () {
-                    // Share functionality
-                  },
+                  onPressed: _shareEvent,
                 ),
               ),
             ],

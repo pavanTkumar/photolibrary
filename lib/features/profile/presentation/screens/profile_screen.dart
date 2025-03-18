@@ -50,13 +50,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
   }
 
   // Navigate to profile edit screen
-  void _navigateToProfileEdit() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const ProfileEditScreen(),
-      ),
-    );
-  }
+void _navigateToProfileEdit() {
+  context.pushNamed(RouteNames.profileEdit);
+}
 
   @override
   Widget build(BuildContext context) {
@@ -78,10 +74,11 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   themeProvider.toggleTheme();
                 },
               ),
-              // Settings button - redirects to profile edit screen
-              void _navigateToProfileEdit() {
-                context.pushNamed(RouteNames.profileEdit);
-              },
+              // Settings button
+              IconButton(
+                icon: const Icon(Icons.settings),
+                onPressed: _navigateToProfileEdit,
+              ),
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(

@@ -760,8 +760,368 @@ class FirestoreService with ChangeNotifier {
     }
   }
   
-  // Community operations - remaining methods follow similar pattern with loading state,
-  // error handling, and notifications
+  /// Add to lib/services/firestore_service.dart - Community operations
+
+  // Community operations
+  Future<List<CommunityModel>> getCommunities({
+    int limit = 20,
+    DocumentSnapshot? lastDocument,
+    String? userId,
+    bool joinedOnly = false,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
+    try {
+      Query query = _communitiesCollection;
+      
+      // If userId is provided and joinedOnly is true, filter for communities
+      // the user is a member of
+      if (userId != null && joinedOnly) {
+        query = query.where('memberIds', arrayContains: userId);
+      }
+      
+      // Apply sorting by newest first
+      query = query.orderBy('createdAt', descending: true);
+      
+      // Apply pagination
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+      
+      // Apply limit
+      query = query.limit(limit);
+      
+      // Execute query
+      QuerySnapshot snapshot = await query.get();
+      
+      // Convert documents to CommunityModel objects
+      List<CommunityModel> communities = snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return CommunityModel.fromMap(data, doc.id);
+      }).toList();
+      
+      _isLoading = false;
+      notifyListeners();
+      
+      return communities;
+    } catch (e) {
+      _errorMessage = 'Error fetching communities: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
+      return [];
+    }
+  }
   
-  // ... add remaining methods for community operations
+  // Stream for real-time community updates
+  Stream<List<CommunityModel>> getCommunitiesStream({
+    int limit = 20,
+    String? userId,
+    bool joinedOnly = false,
+  }) {
+    Query query = _communitiesCollection;
+    
+    // Filter for communities the user is a member of
+    if (userId != null && joinedOnly) {
+      query = query.where('memberIds', arrayContains: userId);
+    }
+    
+    // Apply sorting
+    query = query.orderBy('createdAt', descending: true);
+    
+    // Apply limit
+    query = query.limit(limit);
+    
+    return query.snapshots().map((snapshot) {
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return CommunityModel.fromMap(data, doc.id);
+      }).toList();
+    });
+  }
+  
+  Future<CommunityModel?> getCommunity(String communityId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
+    try {
+      DocumentSnapshot doc = await _communitiesCollection.doc(communityId).get();
+      
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        _isLoading = false;
+        notifyListeners();
+        return CommunityModel.fromMap(data, doc.id);
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      return null;
+    } catch (e) {
+      _errorMessage = 'Error fetching community: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
+      return null;
+    }
+  }
+  
+  // Stream for real-time community details
+  Stream<CommunityModel?> getCommunityStream(String communityId) {
+    return _communitiesCollection.doc(communityId).snapshots().map((doc) {
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        return CommunityModel.fromMap(data, doc.id);
+      }
+      return null;
+    });
+  }
+  
+  Future<String> addCommunity(CommunityModel community) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
+    try {
+      final communityMap = community.toMap();
+      
+      // Add timestamp for sorting
+      communityMap['createdAt'] = FieldValue.serverTimestamp();
+      
+      DocumentReference docRef = await _communitiesCollection.add(communityMap);
+      
+      // Update user communities list
+      if (_auth.currentUser != null) {
+        await _usersCollection.doc(_auth.currentUser!.uid).update({
+          'communities': FieldValue.arrayUnion([docRef.id])
+        });
+      }
+      
+      _isLoading = false;
+      notifyListeners();
+      
+      return docRef.id;
+    } catch (e) {
+      _errorMessage = 'Error creating community: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  Future<void> updateCommunity(CommunityModel community) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
+    try {
+      await _communitiesCollection.doc(community.id).update(community.toMap());
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Error updating community: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  Future<void> deleteCommunity(String communityId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
+    try {
+      // Get all users who are members of this community
+      final community = await getCommunity(communityId);
+      if (community != null) {
+        // Update memberIds users to remove this community from their list
+        for (String userId in community.memberIds) {
+          await _usersCollection.doc(userId).update({
+            'communities': FieldValue.arrayRemove([communityId])
+          });
+        }
+      }
+      
+      // Delete the community document
+      await _communitiesCollection.doc(communityId).delete();
+      
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _errorMessage = 'Error deleting community: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  Future<void> joinCommunity(String communityId, String userId) async {
+    _errorMessage = null;
+    
+    try {
+      // Update the community document to add the user
+      await _communitiesCollection.doc(communityId).update({
+        'memberIds': FieldValue.arrayUnion([userId])
+      });
+      
+      // Update the user document to add the community
+      await _usersCollection.doc(userId).update({
+        'communities': FieldValue.arrayUnion([communityId])
+      });
+    } catch (e) {
+      _errorMessage = 'Error joining community: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  Future<void> leaveCommunity(String communityId, String userId) async {
+    _errorMessage = null;
+    
+    try {
+      // Update the community document to remove the user
+      await _communitiesCollection.doc(communityId).update({
+        'memberIds': FieldValue.arrayRemove([userId])
+      });
+      
+      // Remove user from moderators if they are a moderator
+      await _communitiesCollection.doc(communityId).update({
+        'moderatorIds': FieldValue.arrayRemove([userId])
+      });
+      
+      // Update the user document to remove the community
+      await _usersCollection.doc(userId).update({
+        'communities': FieldValue.arrayRemove([communityId])
+      });
+    } catch (e) {
+      _errorMessage = 'Error leaving community: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  // Membership requests
+  Future<void> requestJoinCommunity(String communityId, String userId, String userName) async {
+    _errorMessage = null;
+    
+    try {
+      await _membershipRequestsCollection.add({
+        'communityId': communityId,
+        'userId': userId,
+        'userName': userName,
+        'requestDate': FieldValue.serverTimestamp(),
+        'status': 'pending'
+      });
+    } catch (e) {
+      _errorMessage = 'Error requesting to join community: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  Future<List<Map<String, dynamic>>> getMembershipRequests(String communityId) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
+    try {
+      QuerySnapshot snapshot = await _membershipRequestsCollection
+          .where('communityId', isEqualTo: communityId)
+          .where('status', isEqualTo: 'pending')
+          .get();
+      
+      List<Map<String, dynamic>> requests = snapshot.docs.map((doc) {
+        Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        return data;
+      }).toList();
+      
+      _isLoading = false;
+      notifyListeners();
+      
+      return requests;
+    } catch (e) {
+      _errorMessage = 'Error getting membership requests: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
+      return [];
+    }
+  }
+  
+  Future<void> approveMembershipRequest(String requestId, String communityId, String userId) async {
+    _errorMessage = null;
+    
+    try {
+      // Update request status
+      await _membershipRequestsCollection.doc(requestId).update({
+        'status': 'approved'
+      });
+      
+      // Add user to community
+      await joinCommunity(communityId, userId);
+    } catch (e) {
+      _errorMessage = 'Error approving membership request: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  Future<void> rejectMembershipRequest(String requestId) async {
+    _errorMessage = null;
+    
+    try {
+      await _membershipRequestsCollection.doc(requestId).update({
+        'status': 'rejected'
+      });
+    } catch (e) {
+      _errorMessage = 'Error rejecting membership request: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  // Add moderator
+  Future<void> addModerator(String communityId, String userId) async {
+    _errorMessage = null;
+    
+    try {
+      await _communitiesCollection.doc(communityId).update({
+        'moderatorIds': FieldValue.arrayUnion([userId])
+      });
+    } catch (e) {
+      _errorMessage = 'Error adding moderator: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
+  // Remove moderator
+  Future<void> removeModerator(String communityId, String userId) async {
+    _errorMessage = null;
+    
+    try {
+      await _communitiesCollection.doc(communityId).update({
+        'moderatorIds': FieldValue.arrayRemove([userId])
+      });
+    } catch (e) {
+      _errorMessage = 'Error removing moderator: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
 }

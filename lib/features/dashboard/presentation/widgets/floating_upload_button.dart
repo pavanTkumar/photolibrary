@@ -1,8 +1,5 @@
-// File: lib/features/dashboard/presentation/widgets/floating_upload_button.dart
+// Complete replacement for lib/features/dashboard/presentation/widgets/floating_upload_button.dart
 
-import 'package:fishpond/features/community/presentation/screens/community_creation_screen.dart';
-import 'package:fishpond/features/events/presentation/screens/event_creation_screen.dart';
-import 'package:fishpond/features/photos/presentation/screens/photo_upload_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/router/route_names.dart';
@@ -44,50 +41,33 @@ class _FloatingUploadButtonState extends State<FloatingUploadButton> with Single
     });
   }
   
-  // Navigate to photo upload screen
-  // In features/dashboard/presentation/widgets/floating_upload_button.dart
-// File: lib/features/dashboard/presentation/widgets/floating_upload_button.dart
+  void _navigateToPhotoUpload(BuildContext context) {
+    setState(() {
+      _isExpanded = false;
+      _controller.reverse();
+    });
+    
+    context.pushNamed(RouteNames.photoUpload);
+  }
 
-void _navigateToPhotoUpload(BuildContext context) {
-  setState(() {
-    _isExpanded = false;
-    _controller.reverse();
-  });
-  
-  // Instead of using pushNamed which might be picking up the wrong route,
-  // use direct navigation to the specific screens
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => const PhotoUploadScreen(),
-    ),
-  );
-}
+  void _navigateToEventCreate(BuildContext context) {
+    setState(() {
+      _isExpanded = false;
+      _controller.reverse();
+    });
+    
+    context.pushNamed(RouteNames.eventCreate);
+  }
 
-void _navigateToEventCreate(BuildContext context) {
-  setState(() {
-    _isExpanded = false;
-    _controller.reverse();
-  });
-  
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => const EventCreationScreen(),
-    ),
-  );
-}
+  void _navigateToCommunityCreate(BuildContext context) {
+    setState(() {
+      _isExpanded = false;
+      _controller.reverse();
+    });
+    
+    context.pushNamed(RouteNames.communityCreate);
+  }
 
-void _navigateToCommunityCreate(BuildContext context) {
-  setState(() {
-    _isExpanded = false;
-    _controller.reverse();
-  });
-  
-  Navigator.of(context).push(
-    MaterialPageRoute(
-      builder: (context) => const CommunityCreationScreen(),
-    ),
-  );
-}
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -144,7 +124,7 @@ void _navigateToCommunityCreate(BuildContext context) {
             ),
           ),
           
-          // Join community button
+          // Community creation button
           AnimatedOpacity(
             opacity: _isExpanded ? 1.0 : 0.0,
             duration: const Duration(milliseconds: 200),
