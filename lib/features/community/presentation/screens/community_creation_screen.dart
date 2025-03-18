@@ -1,5 +1,3 @@
-// File: lib/features/community/presentation/screens/community_creation_screen.dart
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -7,6 +5,10 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
+import '../../../../services/auth_service.dart';
+import '../../../../services/firestore_service.dart';
+import '../../../../services/storage_service.dart';
+import '../../../../core/models/community_model.dart';
 
 class CommunityCreationScreen extends StatefulWidget {
   const CommunityCreationScreen({Key? key}) : super(key: key);
@@ -24,7 +26,33 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
   File? _selectedImage;
   bool _isPrivate = false;
   bool _isCreating = false;
+  bool _isUploading = false;
+  double _uploadProgress = 0.0;
   List<String> _tags = [];
+  
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAuthStatus();
+  }
+  
+  void _checkAuthStatus() {
+    final authService = Provider.of<AuthService>(context, listen: false);
+    if (!authService.isLoggedIn) {
+      // Redirect to login if not logged in
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please log in to create a community'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        context.goNamed('login');
+      });
+    }
+  }
   
   @override
   void dispose() {
@@ -35,13 +63,24 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
   }
   
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (image != null) {
-      setState(() {
-        _selectedImage = File(image.path);
-      });
+    try {
+      final XFile? image = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
   
@@ -67,24 +106,98 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
         _isCreating = true;
       });
       
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-      
-      if (mounted) {
-        setState(() {
-          _isCreating = false;
-        });
+      try {
+        final authService = Provider.of<AuthService>(context, listen: false);
+        final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+        final storageService = Provider.of<StorageService>(context, listen: false);
         
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Community created successfully!'),
-            backgroundColor: Colors.green,
-          ),
+        if (!authService.isLoggedIn || authService.currentUser == null) {
+          throw Exception('User not logged in');
+        }
+        
+        final userId = authService.currentUser!.id;
+        final userName = authService.currentUser!.name;
+        
+        // Upload image if selected
+        String imageUrl = 'https://picsum.photos/seed/${DateTime.now().millisecondsSinceEpoch}/800/450';
+        if (_selectedImage != null) {
+          setState(() {
+            _isUploading = true;
+            _uploadProgress = 0.0;
+          });
+          
+          imageUrl = await storageService.uploadProfileImage(
+            file: _selectedImage!,
+            userId: userId,
+            onProgress: (progress) {
+              setState(() {
+                _uploadProgress = progress;
+              });
+            },
+          );
+          
+          setState(() {
+            _isUploading = false;
+            _uploadProgress = 1.0;
+          });
+        }
+        
+        // Create community model
+        final community = CommunityModel(
+          id: '', // Will be assigned by Firestore
+          name: _nameController.text.trim(),
+          description: _descriptionController.text.trim(),
+          imageUrl: imageUrl,
+          adminId: userId,
+          adminName: userName,
+          createdAt: DateTime.now(),
+          memberIds: [userId], // Creator is the first member
+          moderatorIds: [], // No moderators initially
+          isPrivate: _isPrivate,
+          settings: {
+            'tags': _tags,
+            'allowComments': true,
+            'allowSharing': true,
+            'approvePhotos': _isPrivate, // Auto-approve photos for public communities
+          },
         );
         
-        // Navigate back
-        context.pop();
+        // Add to Firestore
+        final communityId = await firestoreService.addCommunity(community);
+        
+        // Add to user's communities list
+        await authService.updateCommunities([
+          ...authService.currentUser!.communities,
+          communityId,
+        ]);
+        
+        if (mounted) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Community created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navigate back to communities screen
+          context.pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error creating community: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isCreating = false;
+          });
+        }
       }
     }
   }
@@ -102,19 +215,7 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
         ),
       ),
       body: _isCreating
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Creating your community...',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                ],
-              ),
-            )
+          ? _buildLoadingIndicator()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Form(
@@ -141,46 +242,62 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
                                 )
                               : null,
                         ),
-                        child: _selectedImage == null
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    Icons.add_photo_alternate,
-                                    size: 50,
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                  const SizedBox(height: 16),
-                                  Text(
-                                    'Add Community Cover Image',
-                                    style: theme.textTheme.titleMedium,
-                                  ),
-                                ],
-                              )
-                            : Stack(
-                                alignment: Alignment.topRight,
-                                children: [
-                                  Positioned(
-                                    top: 8,
-                                    right: 8,
-                                    child: CircleAvatar(
-                                      radius: 20,
-                                      backgroundColor: Colors.black54,
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _selectedImage = null;
-                                          });
-                                        },
-                                      ),
+                        child: _isUploading 
+                            ? Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    CircularProgressIndicator(
+                                      value: _uploadProgress > 0 ? _uploadProgress : null,
                                     ),
+                                    const SizedBox(height: 16),
+                                    Text(
+                                      'Uploading Image...\n${(_uploadProgress * 100).toInt()}%',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : _selectedImage == null
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_photo_alternate,
+                                        size: 50,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Add Community Cover Image',
+                                        style: theme.textTheme.titleMedium,
+                                      ),
+                                    ],
+                                  )
+                                : Stack(
+                                    alignment: Alignment.topRight,
+                                    children: [
+                                      Positioned(
+                                        top: 8,
+                                        right: 8,
+                                        child: CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: Colors.black54,
+                                          child: IconButton(
+                                            icon: const Icon(
+                                              Icons.close,
+                                              color: Colors.white,
+                                            ),
+                                            onPressed: () {
+                                              setState(() {
+                                                _selectedImage = null;
+                                              });
+                                            },
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
                       ),
                     ).animate().fade(duration: 300.ms).scale(
                       begin: const Offset(0.95, 0.95),
@@ -201,6 +318,9 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a community name';
+                        }
+                        if (value.length < 3) {
+                          return 'Name must be at least 3 characters';
                         }
                         return null;
                       },
@@ -226,6 +346,9 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Please enter a description';
+                        }
+                        if (value.length < 10) {
+                          return 'Description must be at least 10 characters';
                         }
                         return null;
                       },
@@ -345,10 +468,70 @@ class _CommunityCreationScreenState extends State<CommunityCreationScreen> {
                       delay: 600.ms,
                       curve: Curves.easeOutQuad,
                     ),
+                    
+                    const SizedBox(height: 32),
+                    
+                    // Guidelines
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  color: theme.colorScheme.primary,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Community Guidelines',
+                                  style: theme.textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            const Text(
+                              '• Communities should foster positive interactions\n'
+                              '• Respect all members and their contributions\n'
+                              '• Keep content appropriate and relevant\n'
+                              '• Avoid sharing sensitive personal information\n'
+                              '• Report inappropriate content to moderators',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ).animate().fadeIn(duration: 300.ms, delay: 700.ms),
                   ],
                 ),
               ),
             ),
+    );
+  }
+  
+  Widget _buildLoadingIndicator() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(),
+          const SizedBox(height: 16),
+          Text(
+            'Creating your community...',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          if (_isUploading) ...[
+            const SizedBox(height: 8),
+            Text(
+              'Uploading image: ${(_uploadProgress * 100).toInt()}%',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

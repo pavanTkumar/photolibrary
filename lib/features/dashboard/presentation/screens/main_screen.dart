@@ -5,11 +5,10 @@ import 'package:provider/provider.dart';
 import '../../../../core/widgets/navigation/animated_bottom_nav.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../services/auth_service.dart';
-import '../../../photos/presentation/screens/photos_screen.dart';
-import '../../../events/presentation/screens/events_screen.dart';
-import '../../../community/presentation/screens/community_screen.dart';
-import '../../../community/presentation/screens/community_browse_screen.dart';
-import '../../../profile/presentation/screens/profile_screen.dart';
+import '../../../../features/photos/presentation/screens/photos_screen.dart';
+import '../../../../features/events/presentation/screens/events_screen.dart';
+import '../../../../features/community/presentation/screens/community_screen.dart';
+import '../../../../features/profile/presentation/screens/profile_screen.dart';
 import '../widgets/floating_upload_button.dart';
 
 class MainScreen extends StatefulWidget {
@@ -56,42 +55,49 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
   Future<void> _checkCommunityMembership() async {
     final authService = Provider.of<AuthService>(context, listen: false);
     
-    // For demo, set this value based on whether the user is logged in and has communities
-    if (authService.currentUser != null && 
-        authService.currentUser!.communities.isNotEmpty) {
+    if (authService.isLoggedIn && authService.currentUser != null) {
+      // User is logged in, check if they are a member of any community
       setState(() {
-        _hasJoinedCommunity = true;
+        _hasJoinedCommunity = authService.currentUser!.communities.isNotEmpty;
         _isChecking = false;
       });
+      
+      // If not a member of any community, prompt them but don't force redirect
+      if (!_hasJoinedCommunity && mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_currentIndex != 2) { // If not already on the Community tab
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Join a community to enhance your experience!'),
+                duration: const Duration(seconds: 5),
+                action: SnackBarAction(
+                  label: 'Browse',
+                  onPressed: () {
+                    context.pushNamed(RouteNames.communities);
+                  },
+                ),
+              ),
+            );
+          }
+        });
+      }
     } else {
+      // User is not logged in
       setState(() {
         _hasJoinedCommunity = false;
         _isChecking = false;
       });
-      
-      // Redirect to communities browse if not a member of any community
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          context.pushNamed(RouteNames.communities);
-        });
-      }
     }
   }
 
   void _onTabTapped(int index) {
-    // If user hasn't joined a community, redirect to community browse
-    if (!_hasJoinedCommunity && index != 3) { // Allow profile access always
-      context.pushNamed(RouteNames.communities);
-      return;
-    }
-    
+    // When switching tabs, scroll to top of the selected tab's content
     if (_currentIndex == index) {
-      // If tapping the same tab, scroll to top
+      // Handle scroll to top when tapping the same tab again
       if (index == 0) {
-        // Scroll photos to top
-        // Call a scroll controller to scroll to top
+        // Reset PhotosScreen scroll position
       } else if (index == 1) {
-        // Scroll events to top
+        // Reset EventsScreen scroll position
       }
     } else {
       setState(() {
@@ -124,8 +130,8 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
               Text(
                 'Loading your communities...',
                 style: theme.textTheme.bodyLarge,
