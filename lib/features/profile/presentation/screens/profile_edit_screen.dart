@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/storage_service.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
@@ -95,9 +96,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           ),
         );
         
-        // Navigate back
+        // Navigate back using the GoRouter
         if (mounted) {
-          Navigator.of(context).pop();
+          context.pop();
         }
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(

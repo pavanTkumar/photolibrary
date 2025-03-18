@@ -1,4 +1,4 @@
-// File: lib/services/auth_service.dart
+// lib/services/auth_service.dart (improved)
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,11 +12,17 @@ class AuthService with ChangeNotifier {
   // Current user
   UserModel? _currentUser;
   
+  // Loading state
+  bool _isLoading = false;
+  String? _errorMessage;
+  
   // Getters
   User? get firebaseUser => _auth.currentUser;
   UserModel? get currentUser => _currentUser;
   bool get isLoggedIn => _auth.currentUser != null;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
   
   // Constructor
   AuthService() {
@@ -26,12 +32,16 @@ class AuthService with ChangeNotifier {
   
   // Initialize auth service and load user data if already signed in
   Future<void> _initializeUser() async {
+    _isLoading = true;
+    notifyListeners();
+    
     // Listen to auth state changes
     _auth.authStateChanges().listen((User? user) async {
       if (user != null) {
         await _loadUserData();
       } else {
         _currentUser = null;
+        _isLoading = false;
         notifyListeners();
       }
     });
@@ -39,12 +49,19 @@ class AuthService with ChangeNotifier {
     // Also load user data on initialization if user is already signed in
     if (_auth.currentUser != null) {
       await _loadUserData();
+    } else {
+      _isLoading = false;
+      notifyListeners();
     }
   }
   
   // Load user data from Firestore
   Future<void> _loadUserData() async {
     if (_auth.currentUser == null) return;
+    
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
     
     try {
       DocumentSnapshot doc = await _firestore
@@ -53,11 +70,36 @@ class AuthService with ChangeNotifier {
           .get();
       
       if (doc.exists) {
-        _currentUser = UserModel.fromMap(doc.data() as Map<String, dynamic>);
+        final data = doc.data() as Map<String, dynamic>;
+        _currentUser = UserModel.fromMap(data);
+        _isLoading = false;
+        notifyListeners();
+      } else {
+        // Create a basic user if document doesn't exist
+        final user = UserModel(
+          id: _auth.currentUser!.uid,
+          email: _auth.currentUser!.email ?? '',
+          name: _auth.currentUser!.displayName ?? 'User',
+          profileImageUrl: _auth.currentUser!.photoURL,
+          createdAt: DateTime.now(),
+          isAdmin: false,
+          communities: [],
+        );
+        
+        await _firestore
+            .collection('users')
+            .doc(_auth.currentUser!.uid)
+            .set(user.toMap());
+        
+        _currentUser = user;
+        _isLoading = false;
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error loading user data: $e');
+      _errorMessage = 'Error loading user data: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
     }
   }
   
@@ -68,11 +110,21 @@ class AuthService with ChangeNotifier {
     required String name,
     String? profileImageUrl,
   }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
+      
+      // Update the display name in Firebase Auth
+      await result.user!.updateDisplayName(name);
+      if (profileImageUrl != null) {
+        await result.user!.updatePhotoURL(profileImageUrl);
+      }
       
       // Create user profile in Firestore
       final user = UserModel(
@@ -91,10 +143,14 @@ class AuthService with ChangeNotifier {
           .set(user.toMap());
       
       _currentUser = user;
+      _isLoading = false;
       notifyListeners();
       return result;
     } catch (e) {
-      debugPrint('Error signing up: $e');
+      _errorMessage = 'Error signing up: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
       rethrow;
     }
   }
@@ -104,6 +160,10 @@ class AuthService with ChangeNotifier {
     required String email,
     required String password,
   }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
         email: email,
@@ -113,33 +173,51 @@ class AuthService with ChangeNotifier {
       await _loadUserData();
       return result;
     } catch (e) {
-      debugPrint('Error signing in: $e');
+      _errorMessage = 'Error signing in: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
       rethrow;
     }
   }
   
   // Sign out
   Future<void> signOut() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
     try {
       await _auth.signOut();
       _currentUser = null;
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
-      debugPrint('Error signing out: $e');
+      _errorMessage = 'Error signing out: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
       rethrow;
     }
   }
   
   // Request password reset
   Future<void> resetPassword(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
     try {
       // Send password reset email through Firebase Auth
       await _auth.sendPasswordResetEmail(email: email);
       
-      // Log this event for analytics (optional)
-      debugPrint('Password reset email sent to: $email');
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
-      debugPrint('Error resetting password: $e');
+      _errorMessage = 'Error resetting password: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
       rethrow;
     }
   }
@@ -150,6 +228,10 @@ class AuthService with ChangeNotifier {
     String? profileImageUrl,
   }) async {
     if (_auth.currentUser == null || _currentUser == null) return;
+    
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
     
     try {
       final updates = <String, dynamic>{};
@@ -176,9 +258,13 @@ class AuthService with ChangeNotifier {
       if (name != null) _currentUser!.name = name;
       if (profileImageUrl != null) _currentUser!.profileImageUrl = profileImageUrl;
       
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
-      debugPrint('Error updating profile: $e');
+      _errorMessage = 'Error updating profile: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
       rethrow;
     }
   }
@@ -187,6 +273,10 @@ class AuthService with ChangeNotifier {
   Future<void> updateCommunities(List<String> communityIds) async {
     if (_auth.currentUser == null || _currentUser == null) return;
     
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
     try {
       await _firestore
           .collection('users')
@@ -194,9 +284,13 @@ class AuthService with ChangeNotifier {
           .update({'communities': communityIds});
       
       _currentUser!.communities = communityIds;
+      _isLoading = false;
       notifyListeners();
     } catch (e) {
-      debugPrint('Error updating communities: $e');
+      _errorMessage = 'Error updating communities: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
       rethrow;
     }
   }
@@ -205,16 +299,26 @@ class AuthService with ChangeNotifier {
   Future<void> requestJoinCommunity(String communityId) async {
     if (_auth.currentUser == null || _currentUser == null) return;
     
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    
     try {
       await _firestore.collection('membershipRequests').add({
         'userId': _auth.currentUser!.uid,
         'communityId': communityId,
         'userName': _currentUser!.name,
-        'requestDate': DateTime.now(),
+        'requestDate': FieldValue.serverTimestamp(),
         'status': 'pending'
       });
+      
+      _isLoading = false;
+      notifyListeners();
     } catch (e) {
-      debugPrint('Error requesting community membership: $e');
+      _errorMessage = 'Error requesting community membership: $e';
+      _isLoading = false;
+      debugPrint(_errorMessage);
+      notifyListeners();
       rethrow;
     }
   }

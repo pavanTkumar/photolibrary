@@ -1,4 +1,4 @@
-// File: lib/services/photo_upload_service.dart
+// lib/services/photo_upload_service.dart (improved)
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -36,11 +36,11 @@ class PhotoUploadService with ChangeNotifier {
         _firestoreService = firestoreService;
   
   // Methods for selecting images
-  Future<void> pickImageFromCamera() async {
+  Future<void> pickImageFromCamera({int imageQuality = 85}) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 85,
+        imageQuality: imageQuality,
       );
       
       if (pickedFile != null) {
@@ -49,16 +49,17 @@ class PhotoUploadService with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      _errorMessage = 'Error picking image: $e';
+      _errorMessage = 'Error picking image from camera: $e';
+      debugPrint(_errorMessage);
       notifyListeners();
     }
   }
   
-  Future<void> pickImageFromGallery() async {
+  Future<void> pickImageFromGallery({int imageQuality = 85}) async {
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 85,
+        imageQuality: imageQuality,
       );
       
       if (pickedFile != null) {
@@ -67,7 +68,8 @@ class PhotoUploadService with ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      _errorMessage = 'Error picking image: $e';
+      _errorMessage = 'Error picking image from gallery: $e';
+      debugPrint(_errorMessage);
       notifyListeners();
     }
   }
@@ -216,6 +218,17 @@ class PhotoUploadService with ChangeNotifier {
       
       final photoId = await _firestoreService.addPhoto(photo);
       
+      // Update community photo count
+      await _firestoreService.updateCommunityPhotoCount(communityId, 1);
+      
+      // Update user photo count
+      await _firestoreService.updateUserPhotoCount(userId, 1);
+      
+      // If this photo is associated with an event, update the event
+      if (eventId != null) {
+        await _firestoreService.updateEventPhotoCount(eventId, 1);
+      }
+      
       _uploadProgress = 1.0; // 100% complete
       if (onProgress != null) onProgress(_uploadProgress);
       _isUploading = false;
@@ -228,6 +241,7 @@ class PhotoUploadService with ChangeNotifier {
     } catch (e) {
       _errorMessage = 'Error uploading photo: $e';
       _isUploading = false;
+      debugPrint(_errorMessage);
       notifyListeners();
       return null;
     }

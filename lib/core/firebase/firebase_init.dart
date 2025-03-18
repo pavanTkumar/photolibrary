@@ -1,4 +1,7 @@
+// lib/core/firebase/firebase_init.dart (improved)
+
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import '../../firebase_options.dart';
 
@@ -19,6 +22,13 @@ class FirebaseInit {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
+        
+        // Initialize Crashlytics in non-debug mode
+        if (!kDebugMode) {
+          await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+          FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterError;
+        }
+        
         _initialized = true;
         
         if (kDebugMode) {
