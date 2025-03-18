@@ -1,13 +1,17 @@
-// File: lib/features/photos/presentation/screens/photo_details_screen.dart
+// lib/features/photos/presentation/screens/photo_details_screen.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
+import '../../../../services/auth_service.dart';
+import '../../../../services/firestore_service.dart';
 import 'package:share_plus/share_plus.dart';
 
 class PhotoDetailsScreen extends StatefulWidget {
@@ -28,6 +32,8 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
   bool _isLiked = false;
   final TextEditingController _commentController = TextEditingController();
   late AnimationController _likeController;
+  StreamSubscription<PhotoModel?>? _photoSubscription;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -43,67 +49,238 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
   void dispose() {
     _commentController.dispose();
     _likeController.dispose();
+    _photoSubscription?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadPhotoDetails() async {
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 1000));
-
-    if (mounted) {
-      // For demo, create a sample photo
-      final samplePhoto = PhotoModel.sample(
-        index: int.tryParse(widget.photoId.split('_').last) ?? 0,
-      );
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final firestoreService = Provider.of<FirestoreService>(context, listen: false);
       
-      setState(() {
-        _photo = samplePhoto;
-        _isLiked = samplePhoto.isLiked;
-        _isLoading = false;
-      });
+      // Initial load to show data quickly
+      final photo = await firestoreService.getPhoto(widget.photoId);
+      
+      if (mounted) {
+        if (photo == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          context.pop();
+          return;
+        }
+        
+        setState(() {
+          _photo = photo;
+          _isLiked = photo.isLiked;
+          _isLoading = false;
+        });
+        
+        // If the photo was liked, show the heart animation
+        if (_isLiked) {
+          _likeController.value = 1.0;
+        }
+        
+        // Set up real-time updates
+        _photoSubscription = firestoreService.getPhotoStream(widget.photoId).listen((updatedPhoto) {
+          if (mounted && updatedPhoto != null) {
+            final bool wasLiked = _isLiked;
+            final bool isNowLiked = updatedPhoto.isLiked;
+            
+            setState(() {
+              _photo = updatedPhoto;
+              _isLiked = isNowLiked;
+            });
+            
+            // Trigger heart animation if like status changed
+            if (!wasLiked && isNowLiked) {
+              _likeController.forward();
+            } else if (wasLiked && !isNowLiked) {
+              _likeController.reverse();
+            }
+          }
+        }, onError: (error) {
+          debugPrint('Error in photo stream: $error');
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading photo: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _toggleLike() {
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    if (authService.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to like photos'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    final userId = authService.currentUser!.id;
+    
+    // Update UI immediately for better UX
     setState(() {
       _isLiked = !_isLiked;
       if (_isLiked) {
         _likeController.forward();
+        _photo = _photo.copyWith(
+          isLiked: true,
+          likeCount: _photo.likeCount + 1,
+          likedBy: [..._photo.likedBy, userId],
+        );
       } else {
         _likeController.reverse();
+        _photo = _photo.copyWith(
+          isLiked: false,
+          likeCount: _photo.likeCount - 1,
+          likedBy: _photo.likedBy.where((id) => id != userId).toList(),
+        );
       }
-      
-      _photo = _photo.toggleLike();
     });
+    
+    // Update in Firestore
+    if (_isLiked) {
+      firestoreService.likePhoto(_photo.id, userId).catchError((error) {
+        // Revert UI if the operation fails
+        if (mounted) {
+          setState(() {
+            _isLiked = false;
+            _likeController.reverse();
+            _photo = _photo.copyWith(
+              isLiked: false,
+              likeCount: _photo.likeCount - 1,
+              likedBy: _photo.likedBy.where((id) => id != userId).toList(),
+            );
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error liking photo: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    } else {
+      firestoreService.unlikePhoto(_photo.id, userId).catchError((error) {
+        // Revert UI if the operation fails
+        if (mounted) {
+          setState(() {
+            _isLiked = true;
+            _likeController.forward();
+            _photo = _photo.copyWith(
+              isLiked: true,
+              likeCount: _photo.likeCount + 1,
+              likedBy: [..._photo.likedBy, userId],
+            );
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error unliking photo: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    }
   }
+  
   void _sharePhoto() {
-  final shareText = 'Check out this photo: "${_photo.title}" by ${_photo.uploaderName} on Fish Pond';
-  Share.share(shareText);
-}
+    final shareText = 'Check out this photo: "${_photo.title}" by ${_photo.uploaderName} on Fish Pond';
+    Share.share(shareText);
+  }
+
   void _submitComment() {
     if (_commentController.text.trim().isEmpty) return;
-
+    
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    if (authService.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to comment'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
     final newComment = CommentModel(
       id: 'new_comment_${DateTime.now().millisecondsSinceEpoch}',
-      userId: 'current_user',
-      userName: 'Current User',
-      userAvatar: 'https://picsum.photos/seed/me/100/100',
+      userId: authService.currentUser!.id,
+      userName: authService.currentUser!.name,
+      userAvatar: authService.currentUser!.profileImageUrl ?? 'https://picsum.photos/seed/me/100/100',
       content: _commentController.text.trim(),
       timestamp: DateTime.now(),
     );
-
+    
+    // Update UI immediately for better UX
     setState(() {
-      // Fix: Cast explicitly to List<CommentModel> when creating the updated list
       final List<CommentModel> currentComments = List<CommentModel>.from(_photo.comments ?? []);
       final updatedComments = [newComment, ...currentComments];
       _photo = _photo.copyWith(comments: updatedComments);
       _commentController.clear();
     });
+    
+    // Add to Firestore
+    firestoreService.addComment(
+      _photo.id,
+      newComment.userId,
+      newComment.userName,
+      newComment.userAvatar,
+      newComment.content,
+    ).catchError((error) {
+      // If the operation fails, remove the comment from UI
+      if (mounted) {
+        setState(() {
+          final List<CommentModel> currentComments = List<CommentModel>.from(_photo.comments ?? []);
+          currentComments.removeWhere((comment) => comment.id == newComment.id);
+          _photo = _photo.copyWith(comments: currentComments);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding comment: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
   }
 
   void _scrollToComments() {
-    // This would scroll to comments section
-    // Requires implementation with a ScrollController
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
@@ -136,6 +313,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
     
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           // App Bar with photo image
           SliverAppBar(
@@ -374,9 +552,7 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
                           color: theme.colorScheme.onSurface,
                           size: 22,
                         ),
-                        onPressed: () {
-                          // Handle share
-                        },
+                        onPressed: _sharePhoto,
                         isCircular: false,
                         backgroundColor: theme.colorScheme.secondary.withAlpha(25),
                         size: 40,
@@ -444,11 +620,16 @@ class _PhotoDetailsScreenState extends State<PhotoDetailsScreen> with SingleTick
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const CircleAvatar(
-                        radius: 18,
-                        backgroundImage: CachedNetworkImageProvider(
-                          'https://picsum.photos/seed/me/100/100',
-                        ),
+                      Consumer<AuthService>(
+                        builder: (context, authService, child) {
+                          final user = authService.currentUser;
+                          return CircleAvatar(
+                            radius: 18,
+                            backgroundImage: CachedNetworkImageProvider(
+                              user?.profileImageUrl ?? 'https://picsum.photos/seed/me/100/100',
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 12),
                       Expanded(

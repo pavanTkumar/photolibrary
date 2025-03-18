@@ -1,14 +1,19 @@
-// File: lib/features/events/presentation/screens/event_details_screen.dart
+// lib/features/events/presentation/screens/event_details_screen.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../../core/models/event_model.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
+import '../../../../core/router/route_names.dart';
+import '../../../../services/auth_service.dart';
+import '../../../../services/firestore_service.dart';
 
 class EventDetailsScreen extends StatefulWidget {
   final String eventId;
@@ -28,6 +33,8 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
   bool _isAttending = false;
   final TextEditingController _commentController = TextEditingController();
   late AnimationController _attendController;
+  StreamSubscription<EventModel?>? _eventSubscription;
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -43,70 +50,244 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
   void dispose() {
     _commentController.dispose();
     _attendController.dispose();
+    _eventSubscription?.cancel();
+    _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadEventDetails() async {
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 1000));
-
-    if (mounted) {
-      // For demo, create a sample event
-      final sampleEvent = EventModel.sample(
-        index: int.tryParse(widget.eventId.split('_').last) ?? 0,
-      );
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final firestoreService = Provider.of<FirestoreService>(context, listen: false);
       
-      setState(() {
-        _event = sampleEvent;
-        _isAttending = sampleEvent.isAttending;
-        _isLoading = false;
-      });
+      // Initial load to show data quickly
+      final event = await firestoreService.getEvent(widget.eventId);
+      
+      if (mounted) {
+        if (event == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Event not found'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          context.pop();
+          return;
+        }
+        
+        setState(() {
+          _event = event;
+          _isAttending = event.isAttending;
+          _isLoading = false;
+        });
+        
+        // If user is attending, show the animation
+        if (_isAttending) {
+          _attendController.value = 1.0;
+        }
+        
+        // Set up real-time updates
+        _eventSubscription = firestoreService.getEventStream(widget.eventId).listen((updatedEvent) {
+          if (mounted && updatedEvent != null) {
+            final bool wasAttending = _isAttending;
+            final bool isNowAttending = updatedEvent.isAttending;
+            
+            setState(() {
+              _event = updatedEvent;
+              _isAttending = isNowAttending;
+            });
+            
+            // Trigger animation if attendance status changed
+            if (!wasAttending && isNowAttending) {
+              _attendController.forward();
+            } else if (wasAttending && !isNowAttending) {
+              _attendController.reverse();
+            }
+          }
+        }, onError: (error) {
+          debugPrint('Error in event stream: $error');
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading event: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   void _toggleAttending() {
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    if (authService.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to attend events'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
+    final userId = authService.currentUser!.id;
+    
+    // Update UI immediately for better UX
     setState(() {
       _isAttending = !_isAttending;
       if (_isAttending) {
         _attendController.forward();
+        _event = _event.copyWith(
+          isAttending: true,
+          attendeeCount: _event.attendeeCount + 1,
+          attendeeIds: [..._event.attendeeIds, userId],
+        );
       } else {
         _attendController.reverse();
+        _event = _event.copyWith(
+          isAttending: false,
+          attendeeCount: _event.attendeeCount - 1,
+          attendeeIds: _event.attendeeIds.where((id) => id != userId).toList(),
+        );
       }
-      
-      _event = _event.toggleAttending();
     });
+    
+    // Update in Firestore
+    if (_isAttending) {
+      firestoreService.attendEvent(_event.id, userId).catchError((error) {
+        // Revert UI if the operation fails
+        if (mounted) {
+          setState(() {
+            _isAttending = false;
+            _attendController.reverse();
+            _event = _event.copyWith(
+              isAttending: false,
+              attendeeCount: _event.attendeeCount - 1,
+              attendeeIds: _event.attendeeIds.where((id) => id != userId).toList(),
+            );
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error attending event: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    } else {
+      firestoreService.unattendEvent(_event.id, userId).catchError((error) {
+        // Revert UI if the operation fails
+        if (mounted) {
+          setState(() {
+            _isAttending = true;
+            _attendController.forward();
+            _event = _event.copyWith(
+              isAttending: true,
+              attendeeCount: _event.attendeeCount + 1,
+              attendeeIds: [..._event.attendeeIds, userId],
+            );
+          });
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error unattending event: $error'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      });
+    }
   }
   
   void _shareEvent() {
-  final dateFormat = DateFormat.yMMMMd();
-  final timeFormat = DateFormat.jm();
-  final formattedDate = dateFormat.format(_event.eventDate);
-  final formattedTime = timeFormat.format(_event.eventDate);
-  
-  final shareText = 'Join me at ${_event.title} on $formattedDate at $formattedTime at ${_event.location}. Check it out on Fish Pond!';
-  
-  Share.share(shareText);
-} 
+    final dateFormat = DateFormat.yMMMMd();
+    final timeFormat = DateFormat.jm();
+    final formattedDate = dateFormat.format(_event.eventDate);
+    final formattedTime = timeFormat.format(_event.eventDate);
+    
+    final shareText = 'Join me at ${_event.title} on $formattedDate at $formattedTime at ${_event.location}. Check it out on Fish Pond!';
+    
+    Share.share(shareText);
+  }
 
   void _submitComment() {
     if (_commentController.text.trim().isEmpty) return;
-
+    
+    final firestoreService = Provider.of<FirestoreService>(context, listen: false);
+    final authService = Provider.of<AuthService>(context, listen: false);
+    
+    if (authService.currentUser == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to comment'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    
     final newComment = CommentModel(
       id: 'new_comment_${DateTime.now().millisecondsSinceEpoch}',
-      userId: 'current_user',
-      userName: 'Current User',
-      userAvatar: 'https://picsum.photos/seed/me/100/100',
+      userId: authService.currentUser!.id,
+      userName: authService.currentUser!.name,
+      userAvatar: authService.currentUser!.profileImageUrl ?? 'https://picsum.photos/seed/me/100/100',
       content: _commentController.text.trim(),
       timestamp: DateTime.now(),
     );
-
+    
+    // Update UI immediately for better UX
     setState(() {
-      // Fix: Cast explicitly to List<CommentModel> when creating the updated list
       final List<CommentModel> currentComments = List<CommentModel>.from(_event.comments ?? []);
       final updatedComments = [newComment, ...currentComments];
       _event = _event.copyWith(comments: updatedComments);
       _commentController.clear();
     });
+    
+    // Add to Firestore
+    firestoreService.addEventComment(
+      _event.id,
+      newComment.userId,
+      newComment.userName,
+      newComment.userAvatar,
+      newComment.content,
+    ).catchError((error) {
+      // If the operation fails, remove the comment from UI
+      if (mounted) {
+        setState(() {
+          final List<CommentModel> currentComments = List<CommentModel>.from(_event.comments ?? []);
+          currentComments.removeWhere((comment) => comment.id == newComment.id);
+          _event = _event.copyWith(comments: currentComments);
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error adding comment: $error'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    });
+  }
+  
+  void _scrollToComments() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        _scrollController.position.maxScrollExtent,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   @override
@@ -142,6 +323,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
     
     return Scaffold(
       body: CustomScrollView(
+        controller: _scrollController,
         slivers: [
           // App Bar with event image
           SliverAppBar(
@@ -483,7 +665,7 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                                 onTap: () {
                                   // Navigate to photo details
                                   context.pushNamed(
-                                    'photoDetails',
+                                    RouteNames.photoDetails,
                                     pathParameters: {'id': photo.id},
                                   );
                                 },
@@ -537,11 +719,16 @@ class _EventDetailsScreenState extends State<EventDetailsScreen> with SingleTick
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const CircleAvatar(
-                        radius: 18,
-                        backgroundImage: CachedNetworkImageProvider(
-                          'https://picsum.photos/seed/me/100/100',
-                        ),
+                      Consumer<AuthService>(
+                        builder: (context, authService, child) {
+                          final user = authService.currentUser;
+                          return CircleAvatar(
+                            radius: 18,
+                            backgroundImage: CachedNetworkImageProvider(
+                              user?.profileImageUrl ?? 'https://picsum.photos/seed/me/100/100',
+                            ),
+                          );
+                        },
                       ),
                       const SizedBox(width: 12),
                       Expanded(

@@ -1,4 +1,4 @@
-// lib/services/firestore_service.dart (improved)
+// lib/services/firestore_service.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -433,6 +433,38 @@ class FirestoreService with ChangeNotifier {
     }
   }
   
+  // Add comment to an event
+  Future<void> addEventComment(
+    String eventId,
+    String userId,
+    String userName,
+    String userAvatar,
+    String content,
+  ) async {
+    _errorMessage = null;
+    
+    try {
+      final commentData = {
+        'id': DateTime.now().millisecondsSinceEpoch.toString(),
+        'userId': userId,
+        'userName': userName,
+        'userAvatar': userAvatar,
+        'content': content,
+        'timestamp': FieldValue.serverTimestamp(),
+      };
+      
+      // Add to the comments array of the event
+      await _eventsCollection.doc(eventId).update({
+        'comments': FieldValue.arrayUnion([commentData]),
+      });
+    } catch (e) {
+      _errorMessage = 'Error adding event comment: $e';
+      debugPrint(_errorMessage);
+      notifyListeners();
+      rethrow;
+    }
+  }
+  
   // Update community photo count
   Future<void> updateCommunityPhotoCount(String communityId, int increment) async {
     _errorMessage = null;
@@ -760,8 +792,6 @@ class FirestoreService with ChangeNotifier {
     }
   }
   
-  /// Add to lib/services/firestore_service.dart - Community operations
-
   // Community operations
   Future<List<CommunityModel>> getCommunities({
     int limit = 20,
