@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
+import '../../../../services/auth_service.dart';
 import '../widgets/animated_text_field.dart';
 
 class SignupScreen extends StatefulWidget {
@@ -48,16 +50,61 @@ class _SignupScreenState extends State<SignupScreen> {
         _isLoading = true;
       });
 
-      // Simulate signup API call
-      await Future.delayed(const Duration(seconds: 2));
+      try {
+        // Get the auth service
+        final authService = Provider.of<AuthService>(context, listen: false);
+        
+        // Attempt to sign up with Firebase
+        await authService.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          name: _nameController.text.trim(),
+        );
 
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        // Navigate to main screen
-        context.goNamed(RouteNames.main);
+        if (mounted) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Account created successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+          
+          // Navigate to main screen on success
+          context.goNamed(RouteNames.main);
+        }
+      } catch (e) {
+        // Show user-friendly error message
+        if (mounted) {
+          String errorMessage = 'Sign up failed. Please try again.';
+          
+          // Handle specific Firebase auth errors
+          final errorString = e.toString();
+          if (errorString.contains('email-already-in-use')) {
+            errorMessage = 'An account already exists with this email. Please log in or reset your password.';
+          } else if (errorString.contains('invalid-email')) {
+            errorMessage = 'Invalid email format. Please check your email.';
+          } else if (errorString.contains('operation-not-allowed')) {
+            errorMessage = 'Account creation is disabled. Please contact support.';
+          } else if (errorString.contains('weak-password')) {
+            errorMessage = 'Password is too weak. Please use a stronger password.';
+          } else if (errorString.contains('network-request-failed')) {
+            errorMessage = 'Network error. Please check your connection and try again.';
+          }
+          
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(errorMessage),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }

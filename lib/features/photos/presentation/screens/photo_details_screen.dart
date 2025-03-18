@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
+import 'package:share_plus/share_plus.dart';
 
 class PhotoDetailsScreen extends StatefulWidget {
   final String photoId;

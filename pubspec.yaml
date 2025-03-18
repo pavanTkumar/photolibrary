@@ -40,6 +40,7 @@ dependencies:
   cached_network_image: ^3.2.3
   image_picker: ^0.8.7+5
   photo_view: ^0.14.0
+  share_plus: ^6.0.0
   
   # Navigation & Animation
   go_router: ^10.0.0
@@ -63,7 +64,6 @@ dependencies:
   path: ^1.8.3
   
   # Icons
-  
   font_awesome_flutter: ^10.4.0
 
 dev_dependencies:

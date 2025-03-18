@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/signup_screen.dart';
 import '../../features/auth/presentation/screens/onboarding_screen.dart';
@@ -9,23 +10,34 @@ import '../../features/dashboard/presentation/screens/main_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/profile/presentation/screens/profile_edit_screen.dart';
 import '../../features/events/presentation/screens/event_details_screen.dart';
-import '../../features/events/presentation/screens/event_creation_screen.dart'; // New screen
+import '../../features/events/presentation/screens/event_creation_screen.dart';
 import '../../features/photos/presentation/screens/photo_details_screen.dart';
 import '../../features/photos/presentation/screens/photo_upload_screen.dart';
-import '../../features/community/presentation/screens/community_creation_screen.dart'; // New screen
-import '../../features/community/presentation/screens/community_details_screen.dart'; // New screen
-import '../../features/community/presentation/screens/community_browse_screen.dart'; // New screen
+import '../../features/community/presentation/screens/community_creation_screen.dart';
+import '../../features/community/presentation/screens/community_details_screen.dart';
+import '../../features/community/presentation/screens/community_browse_screen.dart';
 import '../../features/admin/presentation/screens/admin_dashboard_screen.dart';
+import '../../services/auth_service.dart';
+import 'auth_guard.dart';
 import 'route_names.dart';
 
 class AppRouter {
   // Global navigation key for the root navigator
   final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+  late final AuthGuard _authGuard;
+  
+  AppRouter(AuthService authService) {
+    _authGuard = AuthGuard(authService);
+  }
   
   late final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     debugLogDiagnostics: true, // Helps with debugging navigation
+    redirect: (context, state) {
+      // Use the auth guard to check if navigation is allowed
+      return _authGuard.canNavigate(context, state);
+    },
     routes: [
       // Onboarding and authentication routes
       GoRoute(
@@ -153,13 +165,5 @@ class AppRouter {
         ),
       ),
     ),
-    // Redirects to handle errors
-    redirect: (context, state) {
-      // If we have an error, redirect to main
-      if (state.error != null) {
-        return '/main';
-      }
-      return null; // No redirect needed
-    },
   );
 }

@@ -7,6 +7,7 @@ import 'services/storage_service.dart';
 import 'services/firestore_service.dart';
 import 'services/photo_upload_service.dart';
 import 'core/firebase/firebase_init.dart';
+import 'core/router/app_router.dart';
 import 'app.dart';
 
 void main() async {
@@ -17,6 +18,10 @@ void main() async {
     // Initialize Firebase
     await FirebaseInit.initializeApp();
     
+    // Create auth service first to pass to router
+    final authService = AuthService();
+    final appRouter = AppRouter(authService);
+    
     // Run the app with providers
     runApp(
       MultiProvider(
@@ -25,7 +30,7 @@ void main() async {
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           
           // Services providers
-          ChangeNotifierProvider(create: (_) => AuthService()),
+          ChangeNotifierProvider.value(value: authService),
           ChangeNotifierProvider(create: (_) => StorageService()),
           ChangeNotifierProvider(create: (_) => FirestoreService()),
           
@@ -42,8 +47,11 @@ void main() async {
               );
             },
           ),
+          
+          // Provide the router
+          Provider.value(value: appRouter),
         ],
-        child: const FishpondApp(),
+        child: FishpondApp(router: appRouter.router),
       ),
     );
   } catch (e) {

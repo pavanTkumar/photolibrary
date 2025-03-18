@@ -1,6 +1,8 @@
+import 'package:fishpond/core/router/route_names.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/models/photo_model.dart';
 import '../../../../core/models/event_model.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
@@ -77,10 +79,9 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                 },
               ),
               // Settings button - redirects to profile edit screen
-              IconButton(
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: _navigateToProfileEdit,
-              ),
+              void _navigateToProfileEdit() {
+                context.pushNamed(RouteNames.profileEdit);
+              },
             ],
             flexibleSpace: FlexibleSpaceBar(
               background: Container(

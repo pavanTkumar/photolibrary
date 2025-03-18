@@ -133,7 +133,11 @@ class AuthService with ChangeNotifier {
   // Request password reset
   Future<void> resetPassword(String email) async {
     try {
+      // Send password reset email through Firebase Auth
       await _auth.sendPasswordResetEmail(email: email);
+      
+      // Log this event for analytics (optional)
+      debugPrint('Password reset email sent to: $email');
     } catch (e) {
       debugPrint('Error resetting password: $e');
       rethrow;
@@ -152,6 +156,17 @@ class AuthService with ChangeNotifier {
       if (name != null) updates['name'] = name;
       if (profileImageUrl != null) updates['profileImageUrl'] = profileImageUrl;
       
+      // Update the display name in Firebase Auth
+      if (name != null) {
+        await _auth.currentUser!.updateDisplayName(name);
+      }
+      
+      // Update profile photo in Firebase Auth
+      if (profileImageUrl != null) {
+        await _auth.currentUser!.updatePhotoURL(profileImageUrl);
+      }
+      
+      // Update in Firestore
       await _firestore
           .collection('users')
           .doc(_auth.currentUser!.uid)

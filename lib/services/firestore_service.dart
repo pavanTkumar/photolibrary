@@ -196,6 +196,45 @@ class FirestoreService with ChangeNotifier {
     }
   }
   
+  // Update community photo count
+  Future<void> updateCommunityPhotoCount(String communityId, int increment) async {
+    try {
+      await _communitiesCollection.doc(communityId).update({
+        'photoCount': FieldValue.increment(increment),
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating community photo count: $e');
+      rethrow;
+    }
+  }
+  
+  // Update user photo count
+  Future<void> updateUserPhotoCount(String userId, int increment) async {
+    try {
+      await _usersCollection.doc(userId).update({
+        'photoCount': FieldValue.increment(increment),
+        'lastActive': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating user photo count: $e');
+      rethrow;
+    }
+  }
+  
+  // Update event photo count
+  Future<void> updateEventPhotoCount(String eventId, int increment) async {
+    try {
+      await _eventsCollection.doc(eventId).update({
+        'photoCount': FieldValue.increment(increment),
+        'lastUpdated': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      print('Error updating event photo count: $e');
+      rethrow;
+    }
+  }
+  
   // Event operations
   Future<List<EventModel>> getEvents({
     String? communityId,

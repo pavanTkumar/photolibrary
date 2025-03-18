@@ -7,7 +7,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/models/community_model.dart';
 import '../../../../core/router/route_names.dart';
 import '../../../../core/widgets/buttons/animated_button.dart';
-import '../widgets/community_card.dart';
+import '../widgets/communtiy_card.dart';
 
 class CommunityBrowseScreen extends StatefulWidget {
   const CommunityBrowseScreen({Key? key}) : super(key: key);

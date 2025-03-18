@@ -193,6 +193,8 @@ class _PhotosScreenState extends State<PhotosScreen> with SingleTickerProviderSt
   }
   
   // Build a filter option UI for photo filtering
+  // Fix for lib/features/photos/presentation/screens/photos_screen.dart
+
   Widget _buildFilterOptions() {
     final theme = Theme.of(context);
     
@@ -216,7 +218,9 @@ class _PhotosScreenState extends State<PhotosScreen> with SingleTickerProviderSt
         bottomRight: Radius.circular(16),
       ),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.6, // Limit height to 60% of screen
+        ),
         decoration: BoxDecoration(
           color: theme.cardColor,
           borderRadius: const BorderRadius.only(
@@ -224,99 +228,102 @@ class _PhotosScreenState extends State<PhotosScreen> with SingleTickerProviderSt
             bottomRight: Radius.circular(16),
           ),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'Filter Options',
-              style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Sort by likes
-            SwitchListTile(
-              title: const Text('Sort by Most Likes'),
-              value: _filterByLikes,
-              onChanged: (value) {
-                setState(() {
-                  _filterByLikes = value;
-                  _applyFiltersAndSearch();
-                });
-              },
-              dense: true,
-            ),
-            
-            const Divider(),
-            
-            // Filter by Community
-            const Text('Filter by Community:'),
-            const SizedBox(height: 8),
-            DropdownButton<String?>(
-              value: _filterByCommunity,
-              hint: const Text('Select Community'),
-              isExpanded: true,
-              onChanged: (value) {
-                setState(() {
-                  _filterByCommunity = value;
-                  _applyFiltersAndSearch();
-                });
-              },
-              items: [
-                const DropdownMenuItem<String?>(
-                  value: null,
-                  child: Text('All Communities'),
+        child: SingleChildScrollView( // Make content scrollable
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min, // Use min size
+            children: [
+              Text(
+                'Filter Options',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-                ...communities.entries.map((entry) {
-                  return DropdownMenuItem<String?>(
-                    value: entry.key,
-                    child: Text(entry.value),
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Sort by likes
+              SwitchListTile(
+                title: const Text('Sort by Most Likes'),
+                value: _filterByLikes,
+                onChanged: (value) {
+                  setState(() {
+                    _filterByLikes = value;
+                    _applyFiltersAndSearch();
+                  });
+                },
+                dense: true,
+              ),
+              
+              const Divider(),
+              
+              // Filter by Community
+              const Text('Filter by Community:'),
+              const SizedBox(height: 8),
+              DropdownButton<String?>(
+                value: _filterByCommunity,
+                hint: const Text('Select Community'),
+                isExpanded: true,
+                onChanged: (value) {
+                  setState(() {
+                    _filterByCommunity = value;
+                    _applyFiltersAndSearch();
+                  });
+                },
+                items: [
+                  const DropdownMenuItem<String?>(
+                    value: null,
+                    child: Text('All Communities'),
+                  ),
+                  ...communities.entries.map((entry) {
+                    return DropdownMenuItem<String?>(
+                      value: entry.key,
+                      child: Text(entry.value),
+                    );
+                  }).toList(),
+                ],
+              ),
+              
+              const SizedBox(height: 16),
+              
+              // Filter by Tags
+              const Text('Filter by Tags:'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: allTags.map((tag) {
+                  final isSelected = _filterByTags.contains(tag);
+                  return FilterChip(
+                    label: Text(tag),
+                    selected: isSelected,
+                    onSelected: (selected) {
+                      setState(() {
+                        if (selected) {
+                          _filterByTags.add(tag);
+                        } else {
+                          _filterByTags.remove(tag);
+                        }
+                        _applyFiltersAndSearch();
+                      });
+                    },
                   );
                 }).toList(),
-              ],
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Filter by Tags
-            const Text('Filter by Tags:'),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: allTags.map((tag) {
-                final isSelected = _filterByTags.contains(tag);
-                return FilterChip(
-                  label: Text(tag),
-                  selected: isSelected,
-                  onSelected: (selected) {
-                    setState(() {
-                      if (selected) {
-                        _filterByTags.add(tag);
-                      } else {
-                        _filterByTags.remove(tag);
-                      }
-                      _applyFiltersAndSearch();
-                    });
-                  },
-                );
-              }).toList(),
-            ),
-            
-            const SizedBox(height: 16),
-            
-            // Reset Filters button
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton(
-                onPressed: _resetFilters,
-                child: const Text('Reset Filters'),
               ),
-            ),
-          ],
+              
+              const SizedBox(height: 16),
+              
+              // Reset Filters button
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _resetFilters,
+                  child: const Text('Reset Filters'),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ).animate().fadeIn(duration: 300.ms).slideY(

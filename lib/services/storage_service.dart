@@ -22,14 +22,26 @@ class StorageService with ChangeNotifier {
     Function(double)? onProgress,
   }) async {
     try {
-      // Create a unique filename
-      final String filename = _uuid.v4();
+      // Create a unique filename with timestamp to avoid collisions
+      final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final String filename = '${_uuid.v4()}_$timestamp';
       final String storagePath = 'photos/$communityId/$userId/$filename${path.extension(file.path)}';
       
-      // Create the upload task
+      // Get file mime type
+      final String mimeType = 'image/${path.extension(file.path).replaceAll('.', '')}';
+      
+      // Create the upload task with metadata
       final UploadTask uploadTask = _storage.ref(storagePath).putFile(
         file,
-        SettableMetadata(contentType: 'image/${path.extension(file.path).replaceAll('.', '')}'),
+        SettableMetadata(
+          contentType: mimeType,
+          customMetadata: {
+            'userId': userId,
+            'communityId': communityId,
+            'uploadedAt': DateTime.now().toIso8601String(),
+            'originalFilename': path.basename(file.path),
+          },
+        ),
       );
       
       // Listen to upload progress if callback provided
@@ -41,7 +53,10 @@ class StorageService with ChangeNotifier {
       }
       
       // Wait for upload to complete
-      await uploadTask;
+      final TaskSnapshot taskSnapshot = await uploadTask;
+      
+      // Log success
+      debugPrint('Upload success: ${taskSnapshot.bytesTransferred} bytes');
       
       // Get the download URL
       final String downloadUrl = await _storage.ref(storagePath).getDownloadURL();
@@ -99,12 +114,24 @@ class StorageService with ChangeNotifier {
     Function(double)? onProgress,
   }) async {
     try {
-      final String storagePath = 'profiles/$userId/profile${path.extension(file.path)}';
+      // Add a timestamp to ensure we don't have caching issues with same filename
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+      final String storagePath = 'profiles/$userId/profile_$timestamp${path.extension(file.path)}';
       
-      // Create the upload task
+      // Get file mime type
+      final String mimeType = 'image/${path.extension(file.path).replaceAll('.', '')}';
+      
+      // Create the upload task with metadata
       final UploadTask uploadTask = _storage.ref(storagePath).putFile(
         file,
-        SettableMetadata(contentType: 'image/${path.extension(file.path).replaceAll('.', '')}'),
+        SettableMetadata(
+          contentType: mimeType,
+          customMetadata: {
+            'userId': userId,
+            'uploadedAt': DateTime.now().toIso8601String(),
+            'type': 'profile',
+          },
+        ),
       );
       
       // Listen to upload progress if callback provided
@@ -116,7 +143,24 @@ class StorageService with ChangeNotifier {
       }
       
       // Wait for upload to complete
-      await uploadTask;
+      final TaskSnapshot taskSnapshot = await uploadTask;
+      
+      // Log success
+      debugPrint('Profile image upload success: ${taskSnapshot.bytesTransferred} bytes');
+      
+      // Delete previous profile image (optional, can be improved with more specific targeting)
+      try {
+        final ListResult result = await _storage.ref('profiles/$userId').listAll();
+        for (var item in result.items) {
+          if (item.name != path.basename(storagePath) && item.name.startsWith('profile_')) {
+            await item.delete();
+            debugPrint('Deleted previous profile image: ${item.name}');
+          }
+        }
+      } catch (e) {
+        // Ignore errors when cleaning up old images
+        debugPrint('Error cleaning up old profile images: $e');
+      }
       
       // Get the download URL
       final String downloadUrl = await _storage.ref(storagePath).getDownloadURL();
