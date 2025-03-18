@@ -1,5 +1,6 @@
-// File: lib/core/router/app_router.dart
+// lib/core/router/app_router.dart
 
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -21,13 +22,32 @@ import '../../services/auth_service.dart';
 import 'auth_guard.dart';
 import 'route_names.dart';
 
+// Helper class to allow the GoRouter to listen to Firebase Auth changes
+class GoRouterRefreshStream extends ChangeNotifier {
+  GoRouterRefreshStream(Stream<dynamic> stream) {
+    notifyListeners();
+    _subscription = stream.asBroadcastStream().listen(
+          (dynamic _) => notifyListeners(),
+        );
+  }
+
+  late final StreamSubscription<dynamic> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.cancel();
+    super.dispose();
+  }
+}
+
 class AppRouter {
   // Global navigation key for the root navigator
   final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
   late final AuthGuard _authGuard;
+  final AuthService _authService;
   
-  AppRouter(AuthService authService) {
-    _authGuard = AuthGuard(authService);
+  AppRouter(this._authService) {
+    _authGuard = AuthGuard(_authService);
   }
   
   late final GoRouter router = GoRouter(
@@ -38,48 +58,112 @@ class AppRouter {
       // Use the auth guard to check if navigation is allowed
       return _authGuard.canNavigate(context, state);
     },
+    refreshListenable: GoRouterRefreshStream(_authService.authStateChanges),
     routes: [
       // Onboarding and authentication routes
       GoRoute(
         path: '/',
         name: RouteNames.onboarding,
-        builder: (context, state) => const OnboardingScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const OnboardingScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       GoRoute(
         path: '/login',
         name: RouteNames.login,
-        builder: (context, state) => const LoginScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const LoginScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       GoRoute(
         path: '/signup',
         name: RouteNames.signup,
-        builder: (context, state) => const SignupScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const SignupScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       
-      // Main app routes - using ShellRoute to maintain bottom navigation state
+      // Main app routes
       GoRoute(
         path: '/main',
         name: RouteNames.main,
-        builder: (context, state) => const MainScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const MainScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       
       // Community routes
       GoRoute(
         path: '/communities',
         name: RouteNames.communities,
-        builder: (context, state) => const CommunityBrowseScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const CommunityBrowseScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       GoRoute(
         path: '/community/create',
         name: RouteNames.communityCreate,
-        builder: (context, state) => const CommunityCreationScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const CommunityCreationScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       GoRoute(
         path: '/community/:id',
         name: RouteNames.communityDetails,
-        builder: (context, state) {
+        pageBuilder: (context, state) {
           final communityId = state.pathParameters['id']!;
-          return CommunityDetailsScreen(communityId: communityId);
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: CommunityDetailsScreen(communityId: communityId),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+                child: child,
+              );
+            },
+          );
         },
       ),
       
@@ -87,12 +171,30 @@ class AppRouter {
       GoRoute(
         path: '/profile',
         name: RouteNames.profile,
-        builder: (context, state) => const ProfileScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const ProfileScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       GoRoute(
         path: '/profile/edit',
         name: RouteNames.profileEdit,
-        builder: (context, state) => const ProfileEditScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const ProfileEditScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       
       // Photo routes
@@ -106,7 +208,7 @@ class AppRouter {
             child: PhotoDetailsScreen(photoId: photoId),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(
-                opacity: animation,
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
                 child: child,
               );
             },
@@ -116,7 +218,16 @@ class AppRouter {
       GoRoute(
         path: '/photo/upload',
         name: RouteNames.photoUpload,
-        builder: (context, state) => const PhotoUploadScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const PhotoUploadScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       
       // Event routes
@@ -130,7 +241,7 @@ class AppRouter {
             child: EventDetailsScreen(eventId: eventId),
             transitionsBuilder: (context, animation, secondaryAnimation, child) {
               return FadeTransition(
-                opacity: animation,
+                opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
                 child: child,
               );
             },
@@ -140,14 +251,32 @@ class AppRouter {
       GoRoute(
         path: '/event/create',
         name: RouteNames.eventCreate,
-        builder: (context, state) => const EventCreationScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const EventCreationScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
       
       // Admin routes
       GoRoute(
         path: '/admin',
         name: RouteNames.adminDashboard,
-        builder: (context, state) => const AdminDashboardScreen(),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AdminDashboardScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+              child: child,
+            );
+          },
+        ),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
@@ -155,11 +284,20 @@ class AppRouter {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Page not found: ${state.uri}'),
+            const Icon(
+              Icons.error_outline, 
+              size: 64,
+              color: Colors.red,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Page not found: ${state.uri}',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () => context.go('/main'),
-              child: const Text('Go to Home'),
+              child: const Text('Go Home'),
             ),
           ],
         ),

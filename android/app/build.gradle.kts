@@ -38,7 +38,7 @@ android {
     }
 
     buildTypes {
-        release {
+        getByName("release") {
             signingConfig = signingConfigs.getByName("internal")
         }
     }
@@ -54,5 +54,5 @@ dependencies {
 }
 
 flutter {
-    source = "../.."
+    source = ".."
 }

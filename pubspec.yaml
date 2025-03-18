@@ -34,13 +34,15 @@ dependencies:
   flutter_animate: ^4.1.1+1
   lottie: ^2.3.2
   flutter_svg: ^2.0.5
+  win32: ^5.0.0
+  collection: ^1.17.0
   
   # Photo Sharing & Gallery
   flutter_staggered_grid_view: ^0.6.2
   cached_network_image: ^3.2.3
   image_picker: ^0.8.7+5
   photo_view: ^0.14.0
-  share_plus: ^6.0.0
+  share_plus: ^10.1.4
   
   # Navigation & Animation
   go_router: ^10.0.0
