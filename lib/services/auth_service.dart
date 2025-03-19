@@ -73,15 +73,25 @@ class AuthService with ChangeNotifier {
         // Convert Firebase data to our UserModel
         final data = doc.data() as Map<String, dynamic>;
         
+        // Extract communities as a list of strings
+        List<String> communities = [];
+        if (data['communities'] != null) {
+          if (data['communities'] is List) {
+            communities = List<String>.from(data['communities']);
+          } else {
+            debugPrint('Warning: communities field exists but is not a List');
+          }
+        }
+        
         // Make sure all necessary fields exist and create a proper user model
-        final Map<String, dynamic> userData = {
+        final userData = {
           'id': _auth.currentUser!.uid,
           'email': data['email'] ?? _auth.currentUser!.email ?? '',
           'name': data['name'] ?? _auth.currentUser!.displayName ?? 'User',
           'profileImageUrl': data['profileImageUrl'] ?? _auth.currentUser!.photoURL,
           'createdAt': data['createdAt'] ?? DateTime.now().toIso8601String(),
           'isAdmin': data['isAdmin'] ?? false,
-          'communities': data['communities'] ?? <String>[],
+          'communities': communities,
         };
         
         _currentUser = UserModel.fromMap(userData);
@@ -296,7 +306,7 @@ class AuthService with ChangeNotifier {
           .doc(_auth.currentUser!.uid)
           .update({'communities': communityIds});
       
-      _currentUser!.communities = communityIds;
+      _currentUser!.communities = List<String>.from(communityIds);
       _isLoading = false;
       notifyListeners();
     } catch (e) {

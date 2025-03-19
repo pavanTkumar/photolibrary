@@ -1,4 +1,4 @@
-// lib/services/photo_upload_service.dart (improved)
+// lib/services/photo_upload_service.dart
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -193,13 +193,15 @@ class PhotoUploadService with ChangeNotifier {
       
       // Create a PhotoModel
       final photo = PhotoModel(
-        id: '', // Firebase will assign an ID
+        id: _uuid.v4(), // Generate a unique ID instead of empty string
         imageUrl: imageUrl,
         thumbnailUrl: thumbnailUrl,
         title: title,
         description: description,
         userId: userId,
         userName: userName,
+        uploaderId: userId,  // Same as userId
+        uploaderName: userName, // Same as userName
         communityId: communityId,
         eventId: eventId,
         uploadDate: DateTime.now(),

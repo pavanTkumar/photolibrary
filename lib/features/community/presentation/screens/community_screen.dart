@@ -22,6 +22,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
   bool _isLoading = true;
   List<CommunityModel> _myCommunities = [];
   List<CommunityModel> _recommendedCommunities = [];
+  String? _errorMessage;
   
   @override
   void initState() {
@@ -35,6 +36,7 @@ class _CommunityScreenState extends State<CommunityScreen> {
     
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
     
     try {
@@ -83,11 +85,12 @@ class _CommunityScreenState extends State<CommunityScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
+          _errorMessage = 'Error loading communities: $e';
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading communities: $e'),
+            content: Text(_errorMessage!),
             backgroundColor: Colors.red,
           ),
         );
@@ -146,10 +149,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
         await firestoreService.joinCommunity(community.id, userId);
         
         // Add to user's communities list
-        await authService.updateCommunities([
-          ...authService.currentUser!.communities,
-          community.id,
-        ]);
+        final updatedCommunities = [...authService.currentUser!.communities, community.id];
+        await authService.updateCommunities(updatedCommunities);
         
         // Refresh the communities list
         _loadCommunities();
@@ -251,6 +252,9 @@ class _CommunityScreenState extends State<CommunityScreen> {
                               isPrivate: community.isPrivate,
                               onTap: () => _navigateToCommunityDetails(community.id),
                             ),
+                          ).animate().fadeIn(
+                            duration: 300.ms,
+                            delay: Duration(milliseconds: 100 * index),
                           );
                         },
                       ),
@@ -438,8 +442,6 @@ class _CommunityScreenState extends State<CommunityScreen> {
               ),
             ),
           ),
-      // Remove the floating action button to fix duplicate FAB issue
-      // The main screen already has a floating action button
     );
   }
   

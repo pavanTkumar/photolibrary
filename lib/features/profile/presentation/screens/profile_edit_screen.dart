@@ -1,4 +1,4 @@
-// File: lib/features/profile/presentation/screens/profile_edit_screen.dart
+// lib/features/profile/presentation/screens/profile_edit_screen.dart
 
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -24,6 +24,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   File? _selectedImage;
   bool _isLoading = false;
   bool _isPasswordResetSent = false;
+  String? _errorMessage;
   
   @override
   void initState() {
@@ -50,13 +51,26 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
   
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-    
-    if (image != null) {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+          _errorMessage = null;
+        });
+      }
+    } catch (e) {
       setState(() {
-        _selectedImage = File(image.path);
+        _errorMessage = 'Error picking image: $e';
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error picking image: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
   
@@ -64,6 +78,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isLoading = true;
+        _errorMessage = null;
       });
       
       try {
@@ -101,6 +116,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           context.pop();
         }
       } catch (e) {
+        setState(() {
+          _errorMessage = 'Error updating profile: $e';
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error updating profile: $e'),
@@ -120,6 +138,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   Future<void> _sendPasswordReset() async {
     setState(() {
       _isLoading = true;
+      _errorMessage = null;
     });
     
     try {
@@ -128,6 +147,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       
       setState(() {
         _isPasswordResetSent = true;
+        _isLoading = false;
       });
       
       ScaffoldMessenger.of(context).showSnackBar(
@@ -137,16 +157,16 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         ),
       );
     } catch (e) {
+      setState(() {
+        _errorMessage = 'Error sending password reset: $e';
+        _isLoading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error sending password reset: $e'),
           backgroundColor: Colors.red,
         ),
       );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
@@ -177,6 +197,30 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Error message if any
+                    if (_errorMessage != null)
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        margin: const EdgeInsets.only(bottom: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.red.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.red.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline, color: Colors.red),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                _errorMessage!,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    
                     // Profile image
                     Center(
                       child: GestureDetector(

@@ -23,20 +23,38 @@ class UserModel {
   
   // Factory constructor to create a UserModel from a Map
   factory UserModel.fromMap(Map<String, dynamic> map) {
+    // Handle different datetime formats
+    DateTime createdAtDateTime;
+    if (map['createdAt'] is Timestamp) {
+      createdAtDateTime = (map['createdAt'] as Timestamp).toDate();
+    } else if (map['createdAt'] is String) {
+      try {
+        createdAtDateTime = DateTime.parse(map['createdAt']);
+      } catch (e) {
+        createdAtDateTime = DateTime.now();
+      }
+    } else {
+      createdAtDateTime = DateTime.now();
+    }
+    
+    // Handle communities with proper type conversion
+    List<String> communitiesList = [];
+    if (map['communities'] != null) {
+      if (map['communities'] is List) {
+        communitiesList = List<String>.from(
+          (map['communities'] as List).map((item) => item.toString())
+        );
+      }
+    }
+    
     return UserModel(
       id: map['id'] ?? '',
       email: map['email'] ?? '',
       name: map['name'] ?? '',
       profileImageUrl: map['profileImageUrl'],
-      createdAt: map['createdAt'] is Timestamp 
-          ? (map['createdAt'] as Timestamp).toDate() 
-          : map['createdAt'] is String 
-              ? DateTime.parse(map['createdAt'])
-              : DateTime.now(),
+      createdAt: createdAtDateTime,
       isAdmin: map['isAdmin'] ?? false,
-      communities: map['communities'] is List 
-          ? List<String>.from(map['communities']) 
-          : <String>[],
+      communities: communitiesList,
     );
   }
   
@@ -70,7 +88,7 @@ class UserModel {
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
       createdAt: createdAt ?? this.createdAt,
       isAdmin: isAdmin ?? this.isAdmin,
-      communities: communities ?? this.communities,
+      communities: communities ?? List<String>.from(this.communities),
     );
   }
 }
