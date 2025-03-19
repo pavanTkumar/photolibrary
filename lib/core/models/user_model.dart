@@ -1,4 +1,4 @@
-// File: lib/core/models/user_model.dart
+// lib/core/models/user_model.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -30,9 +30,13 @@ class UserModel {
       profileImageUrl: map['profileImageUrl'],
       createdAt: map['createdAt'] is Timestamp 
           ? (map['createdAt'] as Timestamp).toDate() 
-          : DateTime.parse(map['createdAt'].toString()),
+          : map['createdAt'] is String 
+              ? DateTime.parse(map['createdAt'])
+              : DateTime.now(),
       isAdmin: map['isAdmin'] ?? false,
-      communities: List<String>.from(map['communities'] ?? []),
+      communities: map['communities'] is List 
+          ? List<String>.from(map['communities']) 
+          : <String>[],
     );
   }
   
@@ -43,7 +47,7 @@ class UserModel {
       'email': email,
       'name': name,
       'profileImageUrl': profileImageUrl,
-      'createdAt': createdAt,
+      'createdAt': createdAt.toIso8601String(),
       'isAdmin': isAdmin,
       'communities': communities,
     };

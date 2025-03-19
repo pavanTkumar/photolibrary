@@ -1,4 +1,4 @@
-// lib/services/auth_service.dart (improved)
+// lib/services/auth_service.dart
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -70,8 +70,21 @@ class AuthService with ChangeNotifier {
           .get();
       
       if (doc.exists) {
+        // Convert Firebase data to our UserModel
         final data = doc.data() as Map<String, dynamic>;
-        _currentUser = UserModel.fromMap(data);
+        
+        // Make sure all necessary fields exist and create a proper user model
+        final Map<String, dynamic> userData = {
+          'id': _auth.currentUser!.uid,
+          'email': data['email'] ?? _auth.currentUser!.email ?? '',
+          'name': data['name'] ?? _auth.currentUser!.displayName ?? 'User',
+          'profileImageUrl': data['profileImageUrl'] ?? _auth.currentUser!.photoURL,
+          'createdAt': data['createdAt'] ?? DateTime.now().toIso8601String(),
+          'isAdmin': data['isAdmin'] ?? false,
+          'communities': data['communities'] ?? <String>[],
+        };
+        
+        _currentUser = UserModel.fromMap(userData);
         _isLoading = false;
         notifyListeners();
       } else {

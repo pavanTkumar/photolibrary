@@ -1,3 +1,5 @@
+// lib/features/community/presentation/screens/community_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -436,16 +438,8 @@ class _CommunityScreenState extends State<CommunityScreen> {
               ),
             ),
           ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _navigateToCommunityBrowse,
-        icon: const Icon(Icons.search),
-        label: const Text('Find More'),
-        tooltip: 'Browse Communities',
-      ).animate().scale(
-        duration: 300.ms,
-        delay: 800.ms,
-        curve: Curves.easeOutBack,
-      ),
+      // Remove the floating action button to fix duplicate FAB issue
+      // The main screen already has a floating action button
     );
   }
   

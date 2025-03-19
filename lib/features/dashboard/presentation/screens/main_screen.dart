@@ -1,3 +1,5 @@
+// lib/features/dashboard/presentation/screens/main_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -111,6 +113,41 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
     }
   }
 
+  Widget _buildFloatingActionButton() {
+    // Show the appropriate FAB based on the current tab
+    switch (_currentIndex) {
+      case 0: // Photos tab
+        return FloatingActionButton(
+          onPressed: () => context.pushNamed(RouteNames.photoUpload),
+          tooltip: 'Upload Photo',
+          child: const Icon(Icons.add_a_photo),
+        ).animate().scale(
+          duration: 300.ms,
+          curve: Curves.easeOutBack,
+        );
+      case 1: // Events tab
+        return FloatingActionButton(
+          onPressed: () => context.pushNamed(RouteNames.eventCreate),
+          tooltip: 'Create Event',
+          child: const Icon(Icons.event_available),
+        ).animate().scale(
+          duration: 300.ms,
+          curve: Curves.easeOutBack,
+        );
+      case 2: // Community tab
+        return FloatingActionButton(
+          onPressed: () => context.pushNamed(RouteNames.communityCreate),
+          tooltip: 'Create Community',
+          child: const Icon(Icons.group_add),
+        ).animate().scale(
+          duration: 300.ms,
+          curve: Curves.easeOutBack,
+        );
+      default:
+        return const SizedBox.shrink(); // No FAB for profile tab
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -158,7 +195,7 @@ class _MainScreenState extends State<MainScreen> with SingleTickerProviderStateM
         onTap: _onTabTapped,
         items: navItems,
       ),
-      floatingActionButton: const FloatingUploadButton(),
+      floatingActionButton: _buildFloatingActionButton(),
     );
   }
 }

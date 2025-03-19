@@ -174,164 +174,168 @@ class _SignupScreenState extends State<SignupScreen> {
                   
                   const SizedBox(height: 24),
                   
-                  // Signup form
-                  Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(24.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Name field
-                            AnimatedTextField(
-                              controller: _nameController,
-                              hintText: 'Full Name',
-                              prefixIcon: Icons.person_outline,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your name';
-                                }
-                                return null;
-                              },
-                              animationDelay: 500,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Email field
-                            AnimatedTextField(
-                              controller: _emailController,
-                              hintText: 'Email',
-                              prefixIcon: Icons.email_outlined,
-                              keyboardType: TextInputType.emailAddress,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your email';
-                                }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                                  return 'Please enter a valid email';
-                                }
-                                return null;
-                              },
-                              animationDelay: 600,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Password field
-                            AnimatedTextField(
-                              controller: _passwordController,
-                              hintText: 'Password',
-                              prefixIcon: Icons.lock_outline,
-                              obscureText: _obscurePassword,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscurePassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscurePassword = !_obscurePassword;
-                                  });
-                                },
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter a password';
-                                }
-                                if (value.length < 6) {
-                                  return 'Password must be at least 6 characters';
-                                }
-                                return null;
-                              },
-                              animationDelay: 700,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Confirm password field
-                            AnimatedTextField(
-                              controller: _confirmPasswordController,
-                              hintText: 'Confirm Password',
-                              prefixIcon: Icons.lock_outline,
-                              obscureText: _obscureConfirmPassword,
-                              suffixIcon: IconButton(
-                                icon: Icon(
-                                  _obscureConfirmPassword
-                                      ? Icons.visibility_outlined
-                                      : Icons.visibility_off_outlined,
-                                ),
-                                onPressed: () {
-                                  setState(() {
-                                    _obscureConfirmPassword = !_obscureConfirmPassword;
-                                  });
-                                },
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please confirm your password';
-                                }
-                                if (value != _passwordController.text) {
-                                  return 'Passwords do not match';
-                                }
-                                return null;
-                              },
-                              animationDelay: 800,
-                            ),
-                            
-                            const SizedBox(height: 16),
-                            
-                            // Terms and conditions checkbox
-                            Row(
+                  // Signup form - Use Expanded to fix overflow
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Card(
+                        elevation: 8,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Checkbox(
-                                  value: _agreeToTerms,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _agreeToTerms = value ?? false;
-                                    });
+                                // Name field
+                                AnimatedTextField(
+                                  controller: _nameController,
+                                  hintText: 'Full Name',
+                                  prefixIcon: Icons.person_outline,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your name';
+                                    }
+                                    return null;
                                   },
-                                  activeColor: theme.colorScheme.primary,
+                                  animationDelay: 500,
                                 ),
-                                Expanded(
-                                  child: Text(
-                                    'I agree to the Terms and Conditions and Privacy Policy',
-                                    style: theme.textTheme.bodySmall,
+                                
+                                const SizedBox(height: 16),
+                                
+                                // Email field
+                                AnimatedTextField(
+                                  controller: _emailController,
+                                  hintText: 'Email',
+                                  prefixIcon: Icons.email_outlined,
+                                  keyboardType: TextInputType.emailAddress,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter your email';
+                                    }
+                                    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
+                                      return 'Please enter a valid email';
+                                    }
+                                    return null;
+                                  },
+                                  animationDelay: 600,
+                                ),
+                                
+                                const SizedBox(height: 16),
+                                
+                                // Password field
+                                AnimatedTextField(
+                                  controller: _passwordController,
+                                  hintText: 'Password',
+                                  prefixIcon: Icons.lock_outline,
+                                  obscureText: _obscurePassword,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscurePassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
                                   ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please enter a password';
+                                    }
+                                    if (value.length < 6) {
+                                      return 'Password must be at least 6 characters';
+                                    }
+                                    return null;
+                                  },
+                                  animationDelay: 700,
                                 ),
+                                
+                                const SizedBox(height: 16),
+                                
+                                // Confirm password field
+                                AnimatedTextField(
+                                  controller: _confirmPasswordController,
+                                  hintText: 'Confirm Password',
+                                  prefixIcon: Icons.lock_outline,
+                                  obscureText: _obscureConfirmPassword,
+                                  suffixIcon: IconButton(
+                                    icon: Icon(
+                                      _obscureConfirmPassword
+                                          ? Icons.visibility_outlined
+                                          : Icons.visibility_off_outlined,
+                                    ),
+                                    onPressed: () {
+                                      setState(() {
+                                        _obscureConfirmPassword = !_obscureConfirmPassword;
+                                      });
+                                    },
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Please confirm your password';
+                                    }
+                                    if (value != _passwordController.text) {
+                                      return 'Passwords do not match';
+                                    }
+                                    return null;
+                                  },
+                                  animationDelay: 800,
+                                ),
+                                
+                                const SizedBox(height: 16),
+                                
+                                // Terms and conditions checkbox
+                                Row(
+                                  children: [
+                                    Checkbox(
+                                      value: _agreeToTerms,
+                                      onChanged: (value) {
+                                        setState(() {
+                                          _agreeToTerms = value ?? false;
+                                        });
+                                      },
+                                      activeColor: theme.colorScheme.primary,
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        'I agree to the Terms and Conditions and Privacy Policy',
+                                        style: theme.textTheme.bodySmall,
+                                      ),
+                                    ),
+                                  ],
+                                ).animate().fadeIn(duration: 500.ms, delay: 900.ms),
+                                
+                                const SizedBox(height: 24),
+                                
+                                // Signup button
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: AnimatedGradientButton(
+                                    text: 'Sign Up',
+                                    onPressed: _signup,
+                                    gradient: [
+                                      theme.colorScheme.primary,
+                                      theme.colorScheme.primaryContainer,
+                                    ],
+                                    isLoading: _isLoading,
+                                  ),
+                                ).animate()
+                                  .fadeIn(duration: 500.ms, delay: 1000.ms)
+                                  .slideY(
+                                    begin: 0.3,
+                                    end: 0.0,
+                                    duration: 500.ms,
+                                    delay: 1000.ms,
+                                    curve: Curves.easeOutQuad,
+                                  ),
                               ],
-                            ).animate().fadeIn(duration: 500.ms, delay: 900.ms),
-                            
-                            const SizedBox(height: 24),
-                            
-                            // Signup button
-                            SizedBox(
-                              width: double.infinity,
-                              child: AnimatedGradientButton(
-                                text: 'Sign Up',
-                                onPressed: _signup,
-                                gradient: [
-                                  theme.colorScheme.primary,
-                                  theme.colorScheme.primaryContainer,
-                                ],
-                                isLoading: _isLoading,
-                              ),
-                            ).animate()
-                              .fadeIn(duration: 500.ms, delay: 1000.ms)
-                              .slideY(
-                                begin: 0.3,
-                                end: 0.0,
-                                duration: 500.ms,
-                                delay: 1000.ms,
-                                curve: Curves.easeOutQuad,
-                              ),
-                          ],
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -344,8 +348,6 @@ class _SignupScreenState extends State<SignupScreen> {
                       delay: 400.ms,
                       curve: Curves.easeOutQuad,
                     ),
-                  
-                  const Spacer(),
                   
                   // Login link
                   Center(

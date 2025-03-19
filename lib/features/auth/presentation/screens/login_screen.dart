@@ -1,3 +1,5 @@
+// lib/features/auth/presentation/screens/login_screen.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -20,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
+  String? _errorMessage;
 
   @override
   void dispose() {
@@ -32,6 +35,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       setState(() {
         _isLoading = true;
+        _errorMessage = null;
       });
 
       try {
@@ -51,30 +55,9 @@ class _LoginScreenState extends State<LoginScreen> {
       } catch (e) {
         // Show user-friendly error message
         if (mounted) {
-          String errorMessage = 'Login failed. Please try again.';
-          
-          // Handle specific Firebase auth errors
-          final errorString = e.toString();
-          if (errorString.contains('user-not-found')) {
-            errorMessage = 'No account found with this email. Please check your email or sign up.';
-          } else if (errorString.contains('wrong-password')) {
-            errorMessage = 'Incorrect password. Please try again or reset your password.';
-          } else if (errorString.contains('invalid-email')) {
-            errorMessage = 'Invalid email format. Please check your email.';
-          } else if (errorString.contains('user-disabled')) {
-            errorMessage = 'This account has been disabled. Please contact support.';
-          } else if (errorString.contains('too-many-requests')) {
-            errorMessage = 'Too many login attempts. Please try again later or reset your password.';
-          } else if (errorString.contains('network-request-failed')) {
-            errorMessage = 'Network error. Please check your connection and try again.';
-          }
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(errorMessage),
-              backgroundColor: Colors.red,
-            ),
-          );
+          setState(() {
+            _errorMessage = _formatErrorMessage(e.toString());
+          });
         }
       } finally {
         if (mounted) {
@@ -84,6 +67,25 @@ class _LoginScreenState extends State<LoginScreen> {
         }
       }
     }
+  }
+  
+  String _formatErrorMessage(String errorString) {
+    if (errorString.contains('user-not-found')) {
+      return 'No account found with this email. Please check your email or sign up.';
+    } else if (errorString.contains('wrong-password')) {
+      return 'Incorrect password. Please try again or reset your password.';
+    } else if (errorString.contains('invalid-email')) {
+      return 'Invalid email format. Please check your email.';
+    } else if (errorString.contains('user-disabled')) {
+      return 'This account has been disabled. Please contact support.';
+    } else if (errorString.contains('too-many-requests')) {
+      return 'Too many login attempts. Please try again later or reset your password.';
+    } else if (errorString.contains('network-request-failed')) {
+      return 'Network error. Please check your connection and try again.';
+    } else if (errorString.contains('invalid-credential')) {
+      return 'Email or password is incorrect. Please try again.';
+    }
+    return 'Login failed. Please try again.';
   }
 
   @override
@@ -192,6 +194,32 @@ class _LoginScreenState extends State<LoginScreen> {
                               ),
                             
                             const SizedBox(height: 24),
+                            
+                            // Error message if present
+                            if (_errorMessage != null)
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.error_outline, color: Colors.red),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        _errorMessage!,
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              
+                            if (_errorMessage != null)
+                              const SizedBox(height: 16),
                             
                             // Email field
                             AnimatedTextField(
